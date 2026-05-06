@@ -25,7 +25,12 @@ PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
 
 def auth_header():
     token = base64.b64encode(f'{WP_USERNAME}:{WP_APP_PASSWORD}'.encode()).decode()
-    return {'Authorization': f'Basic {token}', 'Content-Type': 'application/json'}
+    return {
+        'Authorization': f'Basic {token}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 haibokusha-auto/1.0'
+    }
 
 
 def resolve_terms(taxonomy, names):
@@ -53,16 +58,14 @@ def resolve_terms(taxonomy, names):
 def post_article(path: Path):
     post = frontmatter.load(path)
     title = post.metadata.get('title', path.stem)
-    status = post.metadata.get('status', 'publish')  # publish / draft / future
+    status = post.metadata.get('status', 'publish')
     excerpt = post.metadata.get('excerpt', '')
     cats = post.metadata.get('categories', [])
     tags = post.metadata.get('tags', [])
 
-    # Markdown → HTML
     html = markdown.markdown(post.content,
                              extensions=['extra', 'tables', 'fenced_code'])
 
-    # Resolve taxonomies
     cat_ids = resolve_terms('categories', cats)
     tag_ids = resolve_terms('tags', tags)
 
@@ -88,7 +91,6 @@ def post_article(path: Path):
 
 
 def main():
-    # *.md は対象、ただし *.tweets.md（X投稿用ドラフト）は除外
     new_posts = sorted(
         p for p in POSTS_DIR.glob('*.md')
         if p.is_file() and not p.name.endswith('.tweets.md')
