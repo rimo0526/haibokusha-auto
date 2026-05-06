@@ -40,7 +40,17 @@ jobs:
           git add posts/
           if git diff --staged --quiet; then
             echo "No file changes to commit."
-          else
-            git commit -m "chore: move published posts to posts/published/ [skip ci]"
-            git push
+            exit 0
           fi
+          git commit -m "chore: move published posts to posts/published/ [skip ci]"
+          for attempt in 1 2 3; do
+            if git push origin main; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, rebasing..."
+            git pull --rebase origin main || true
+            sleep 2
+          done
+          echo "Push failed after 3 retries"
+          exit 1
