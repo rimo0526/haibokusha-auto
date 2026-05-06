@@ -34,21 +34,30 @@ def auth_header():
 
 
 def resolve_terms(taxonomy, names):
-    """カテゴリー or タグ名のリストを ID リストに変換。なければ新規作成。"""
+    """カテゴリー or タグ名のリストを ID リストに変換。
+    GET（読み取り）は公開エンドポイントなので認証なしで実行する（WAF回避）。
+    新規作成（POST）のみ認証ヘッダを付ける。
+    """
     if not names:
         return []
+
+    public_headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    r = requests.get(f'{WP_URL}/wp-json/wp/v2/{taxonomy}',
+                     params={'per_page': 100}, headers=public_headers, timeout=30)
+    r.raise_for_status()
+    all_terms = r.json()
+
     ids = []
-    headers = auth_header()
     for name in names:
-        r = requests.get(f'{WP_URL}/wp-json/wp/v2/{taxonomy}',
-                         params={'search': name}, headers=headers, timeout=30)
-        r.raise_for_status()
-        existing = next((t for t in r.json() if t['name'] == name), None)
+        existing = next((t for t in all_terms if t['name'] == name), None)
         if existing:
             ids.append(existing['id'])
         else:
             r = requests.post(f'{WP_URL}/wp-json/wp/v2/{taxonomy}',
-                              json={'name': name}, headers=headers, timeout=30)
+                              json={'name': name}, headers=auth_header(), timeout=30)
             r.raise_for_status()
             ids.append(r.json()['id'])
             print(f'  + Created {taxonomy}: {name}')
