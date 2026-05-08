@@ -1,0 +1,71 @@
+name: Regenerate Eyecatches
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'ApplyMode dry/apply'
+        required: true
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - apply
+      only:
+        description: 'Only specific slug (empty=all)'
+        required: false
+        default: ''
+      limit:
+        description: 'Limit count (0=unlimited)'
+        required: false
+        default: '0'
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Japanese fonts (JP priority)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            fonts-noto-cjk \
+            fonts-noto-cjk-extra \
+            fonts-ipaexfont-gothic \
+            fonts-ipafont-gothic
+          sudo mkdir -p /usr/share/fonts/opentype/noto
+          if [ ! -f /usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf ]; then
+            sudo wget -q -O /usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf \
+              "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Japanese/NotoSansJP-Bold.otf" || true
+          fi
+          if [ ! -f /usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf ]; then
+            sudo wget -q -O /usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf \
+              "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Japanese/NotoSansJP-Regular.otf" || true
+          fi
+          sudo fc-cache -f -v
+          fc-list :lang=ja | head -20
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run regeneration
+        env:
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
+          if [ -n "${{ inputs.only }}" ]; then ARGS="$ARGS --only ${{ inputs.only }}"; fi
+          if [ "${{ inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          python regenerate_eyecatches.py $ARGS
+
