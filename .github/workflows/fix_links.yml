@@ -1,0 +1,46 @@
+name: Fix Placeholder Links
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'ApplyMode dry/apply'
+        required: true
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - apply
+      target:
+        description: 'Target both/wp-only/compass-only'
+        required: true
+        default: 'wp-only'
+        type: choice
+        options:
+          - both
+          - wp-only
+          - compass-only
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run fix_links.py
+        env:
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
+          if [ "${{ inputs.target }}" = "wp-only" ]; then ARGS="$ARGS --wp-only"; fi
+          if [ "${{ inputs.target }}" = "compass-only" ]; then ARGS="$ARGS --compass-only"; fi
+          python fix_links.py $ARGS
+
