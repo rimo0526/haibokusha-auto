@@ -31,6 +31,13 @@ import requests
 
 from eyecatch import generate_eyecatch_png, category_to_label
 from illustrations import inject_illustrations
+from inject_ctas import inject_ctas
+try:
+    from inject_affiliate_links import AFFILIATE_LINKS, apply_replacements
+except ImportError:
+    AFFILIATE_LINKS = {}
+    def apply_replacements(text, links, only=None):
+        return text, 0
 
 # ── 環境変数 ────────────────────────────────────
 WP_URL = os.environ['WP_URL'].rstrip('/')
@@ -168,6 +175,15 @@ def post_article(path: Path) -> dict:
     # 段落画像（H2 挿絵）を注入
     primary_cat = cats[0] if cats else ''
     html = inject_illustrations(html, category=primary_cat)
+
+    # CTAボックスを注入（収益化用）
+    cta_slug = post.metadata.get('slug') or path.stem
+    html = inject_ctas(html, categories=cats, slug=cta_slug)
+
+    # アフィリエイト URL を実 URL に置換（#REPLACE_*_URL → 本URL）
+    # 未承認キーは値が空のまま、placeholder が残る（後で承認後に再公開で置換）
+    if AFFILIATE_LINKS:
+        html, _affi_count = apply_replacements(html, AFFILIATE_LINKS)
 
     # タクソノミー解決
     cat_ids = resolve_terms('categories', cats)
