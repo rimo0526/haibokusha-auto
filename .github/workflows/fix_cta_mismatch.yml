@@ -1,0 +1,35 @@
+name: Fix CTA Brand Mismatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Mode dry/apply'
+        required: true
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - apply
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run fix_cta_mismatch.py
+        env:
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
+          python fix_cta_mismatch.py $ARGS
+
