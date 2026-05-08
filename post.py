@@ -181,9 +181,15 @@ def post_article(path: Path) -> dict:
     html = inject_ctas(html, categories=cats, slug=cta_slug)
 
     # アフィリエイト URL を実 URL に置換（#REPLACE_*_URL → 本URL）
-    # 未承認キーは値が空のまま、placeholder が残る（後で承認後に再公開で置換）
+    # fix_links.py の FALLBACK_MAP を使い、未承認キーも fallback URL で必ず埋める
+    # → これで placeholder が WP に残るのを防ぐ
     if AFFILIATE_LINKS:
         html, _affi_count = apply_replacements(html, AFFILIATE_LINKS)
+        try:
+            from fix_links import fix_text as _fix_text
+            html, _fb_count = _fix_text(html)
+        except ImportError:
+            pass
 
     # タクソノミー解決
     cat_ids = resolve_terms('categories', cats)

@@ -22,31 +22,58 @@ GRAY = (75, 85, 99)         # #4B5563
 LIGHT = (156, 163, 175)     # #9CA3AF
 WHITE = (255, 255, 255)
 
-# ── フォント候補（先頭から見つかった順） ─────────
+# ── フォント候補（先頭から見つかった順、(path, ttc_index) のタプル） ─────
+# 重要：NotoSansCJK は OTC（OpenType Collection）で複数言語が同梱されている。
+# デフォルト index=0 だと SC（簡体字中国語）扱いになり、日本語の漢字/仮名が
+# 中華フォントの字形で出るか、豆腐化することがある。
+# 通常 index 順は 0=SC, 1=TC, 2=HK, 3=JP, 4=KR ── JPは index=3 が標準。
+# パッケージ依存で揺れる場合に備え、複数 index を試行する。
 FONT_BOLD_PATHS = [
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-    "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
-    "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
-    "/usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf",
-    "C:\\Windows\\Fonts\\meiryob.ttc",
-    "C:\\Windows\\Fonts\\YuGothB.ttc",
+    # JP 専用フォント（最優先・index=0で確実）
+    ("/usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf", 0),
+    ("/usr/share/fonts/truetype/noto/NotoSansJP-Bold.otf", 0),
+    ("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 0),
+    ("/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf", 0),
+    ("/usr/share/fonts/truetype/ipaexfont-gothic/ipaexg.ttf", 0),
+    # NotoSansCJK の TTC（複数 index フォールバック）
+    ("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 3),
+    ("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 2),
+    ("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc", 3),
+    ("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc", 2),
+    ("/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc", 3),
+    ("/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc", 2),
+    # Windows（ローカルプレビュー用）
+    ("C:\\Windows\\Fonts\\YuGothB.ttc", 0),
+    ("C:\\Windows\\Fonts\\meiryob.ttc", 0),
 ]
 FONT_REGULAR_PATHS = [
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf",
-    "C:\\Windows\\Fonts\\meiryo.ttc",
-    "C:\\Windows\\Fonts\\YuGothR.ttc",
+    ("/usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf", 0),
+    ("/usr/share/fonts/truetype/noto/NotoSansJP-Regular.otf", 0),
+    ("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 0),
+    ("/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf", 0),
+    ("/usr/share/fonts/truetype/ipaexfont-gothic/ipaexg.ttf", 0),
+    ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 3),
+    ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 2),
+    ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", 3),
+    ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", 2),
+    ("/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 3),
+    ("/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 2),
+    ("C:\\Windows\\Fonts\\YuGothR.ttc", 0),
+    ("C:\\Windows\\Fonts\\meiryo.ttc", 0),
 ]
 
 
 def _load_font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     paths = FONT_BOLD_PATHS if bold else FONT_REGULAR_PATHS
-    for path in paths:
+    for entry in paths:
+        # 後方互換：旧形式（文字列）も受け付ける
+        if isinstance(entry, str):
+            path, idx = entry, 0
+        else:
+            path, idx = entry
         try:
-            return ImageFont.truetype(path, size)
-        except (OSError, IOError):
+            return ImageFont.truetype(path, size, index=idx)
+        except (OSError, IOError, TypeError):
             continue
     # 最終フォールバック（ASCIIのみだが落とさない）
     return ImageFont.load_default()
