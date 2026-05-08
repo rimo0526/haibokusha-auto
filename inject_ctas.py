@@ -37,7 +37,7 @@ CTA_BENGOSHI_PRIMARY = """
 </div>
 """.strip()
 
-CTA_RAKUTEN_SHOKEN = """
+CTA_DMM_KABU = """
 <div class="hb-cta-box">
   <span class="hb-cta-label">NISA口座</span>
   <h3 class="hb-cta-title">楽天証券で新NISA口座を開設（無料）</h3>
@@ -62,7 +62,7 @@ CTA_SBI_SHOKEN = """
 </div>
 """.strip()
 
-CTA_RAKUTEN_DEBIT = """
+CTA_NEXUS_CARD = """
 <div class="hb-cta-box">
   <span class="hb-cta-label">デビカ</span>
   <h3 class="hb-cta-title">楽天銀行デビット VISA：俺のメインカード</h3>
@@ -72,7 +72,7 @@ CTA_RAKUTEN_DEBIT = """
 </div>
 """.strip()
 
-CTA_MFW = """
+CTA_COCONALA = """
 <div class="hb-cta-box">
   <span class="hb-cta-label">家計簿アプリ</span>
   <h3 class="hb-cta-title">マネーフォワードMEで家計を見える化</h3>
@@ -373,27 +373,27 @@ CATEGORY_CTA_PRIMARY = {
     "money": CTA_BENGOSHI_PRIMARY,
     "お金": CTA_BENGOSHI_PRIMARY,
     "Mental": CTA_BENGOSHI_PRIMARY,
-    "Business": CTA_RAKUTEN_SHOKEN,
-    "business": CTA_RAKUTEN_SHOKEN,
-    "副業": CTA_RAKUTEN_SHOKEN,
-    "About": CTA_RAKUTEN_SHOKEN,
+    "Business": CTA_DMM_KABU,
+    "business": CTA_DMM_KABU,
+    "副業": CTA_DMM_KABU,
+    "About": CTA_DMM_KABU,
 }
 
 CATEGORY_CTA_SECONDARY = {
-    "Money": CTA_RAKUTEN_DEBIT,
-    "money": CTA_RAKUTEN_DEBIT,
-    "お金": CTA_RAKUTEN_DEBIT,
+    "Money": CTA_NEXUS_CARD,
+    "money": CTA_NEXUS_CARD,
+    "お金": CTA_NEXUS_CARD,
     "Mental": CTA_AMAZON_BOOKS,
-    "Business": CTA_MFW,
-    "business": CTA_MFW,
-    "副業": CTA_MFW,
+    "Business": CTA_COCONALA,
+    "business": CTA_COCONALA,
+    "副業": CTA_COCONALA,
 }
 
 CATEGORY_CTA_CLOSING = {
-    "Money": CTA_MFW,
-    "money": CTA_MFW,
-    "お金": CTA_MFW,
-    "Mental": CTA_RAKUTEN_SHOKEN,
+    "Money": CTA_COCONALA,
+    "money": CTA_COCONALA,
+    "お金": CTA_COCONALA,
+    "Mental": CTA_DMM_KABU,
     "Business": CTA_STUDYING,
     "business": CTA_STUDYING,
     "副業": CTA_STUDYING,
@@ -406,20 +406,20 @@ def select_ctas(categories: List[str], slug: str = "") -> tuple:
     """
     primary_cat = categories[0] if categories else "Money"
     primary = CATEGORY_CTA_PRIMARY.get(primary_cat, CTA_BENGOSHI_PRIMARY)
-    secondary = CATEGORY_CTA_SECONDARY.get(primary_cat, CTA_RAKUTEN_DEBIT)
-    closing = CATEGORY_CTA_CLOSING.get(primary_cat, CTA_MFW)
+    secondary = CATEGORY_CTA_SECONDARY.get(primary_cat, CTA_NEXUS_CARD)
+    closing = CATEGORY_CTA_CLOSING.get(primary_cat, CTA_COCONALA)
 
     # slug ベースの上書き（特定キーワードを含む場合）
     s = slug.lower()
     if "nisa" in s or "shoken" in s or "investment" in s:
         # 2026-05-08: DMM株 のアフィリンク確定。SBI証券は提携待ちのため DMM株 に差替
-        primary, secondary, closing = CTA_RAKUTEN_SHOKEN, CTA_DMM_KABU, CTA_RAKUTEN_DEBIT
+        primary, secondary, closing = CTA_DMM_KABU, CTA_DMM_KABU, CTA_NEXUS_CARD
     elif "kakeibo" in s or "household" in s:
-        primary, secondary, closing = CTA_MFW, CTA_BENGOSHI_PRIMARY, CTA_RAKUTEN_SHOKEN
+        primary, secondary, closing = CTA_COCONALA, CTA_BENGOSHI_PRIMARY, CTA_DMM_KABU
     elif "saimu-seiri" in s or "bengoshi" in s or "lawyer" in s:
-        primary, secondary, closing = CTA_BENGOSHI_PRIMARY, CTA_RAKUTEN_DEBIT, CTA_MFW
+        primary, secondary, closing = CTA_BENGOSHI_PRIMARY, CTA_NEXUS_CARD, CTA_COCONALA
     elif "debit" in s or "card" in s:
-        primary, secondary, closing = CTA_RAKUTEN_DEBIT, CTA_BENGOSHI_PRIMARY, CTA_RAKUTEN_SHOKEN
+        primary, secondary, closing = CTA_NEXUS_CARD, CTA_BENGOSHI_PRIMARY, CTA_DMM_KABU
 
     return primary, secondary, closing
 
