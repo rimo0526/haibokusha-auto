@@ -1,0 +1,40 @@
+name: Fix CTA v2 (Image-rich)
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Mode dry/apply'
+        required: true
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - apply
+      limit:
+        description: 'limit (0=all)'
+        required: false
+        default: '0'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run fix_cta_v2.py
+        env:
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
+          if [ "${{ inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          python fix_cta_v2.py $ARGS
+
