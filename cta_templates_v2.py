@@ -8,7 +8,7 @@ WP の KSES sanitizer は <style> ブロックを剥がす可能性があるた�
 BRAND_IMAGES = {
     "DMM_KABU":            "https://kabu.dmm.com/_img/og/common_230120.png",
     "KASHIKINE_NEXUS":     "https://apply.mycredit.nexuscard.co.jp/lp/common/images/apple-touch-icon.png",
-    "BENGOSHI_ABIES":      "https://www.abies-law.jp/img/img/co_favicon.webp",
+    "BENGOSHI_ABIES":      "https://www.abies-law.jp/img/img/co_logo.webp",
     "COCONALA":            "https://coconala.com/images/facebook.png",
     "LIGHT_FX":            "https://lightfx.jp/images/social/facebook.jpg",
     # 5/9 新規追加（電気・ガス + フリーランス求人）
@@ -17,6 +17,10 @@ BRAND_IMAGES = {
     "DENKI_SUSTAIN":       "https://www.netenergy.jp/img/favicon.ico",
     "DENKI_CHOICE":        "https://user.denkichoice.jp/favicon.ico",
     "IT_KYUJIN_FREELANCE": "https://it-kyujin.jp/wp-content/uploads/2025/01/h0003.webp",
+    # 5/9 新規：もしも EC・汎用
+    "MOSHIMO_RAKUTEN_ICHIBA":  "https://r.r10s.jp/com/img/home/top/ogp.png",
+    "MOSHIMO_YAHOO_SHOPPING":  "https://s.yimg.jp/images/shp_front/pc/front/images/common/img_og_01.png",
+    "MOSHIMO_FURUSATO_NIPPON": "https://static.furusato-nippon.com/assets/images/img_ogp.png",
 }
 
 BRAND_URLS = {
@@ -30,6 +34,9 @@ BRAND_URLS = {
     "DENKI_SUSTAIN":       "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1VVHAA+4RKE+5YJRM",
     "DENKI_CHOICE":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1WGWW2+3SPO+TRVYQ",
     "IT_KYUJIN_FREELANCE": "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1SD4Y+4LXM+5YJRM",
+    "MOSHIMO_RAKUTEN_ICHIBA":  "https://af.moshimo.com/af/c/click?a_id=5542698&p_id=54&pc_id=54&pl_id=621",
+    "MOSHIMO_YAHOO_SHOPPING":  "https://af.moshimo.com/af/c/click?a_id=5542704&p_id=1225&pc_id=1925&pl_id=18502",
+    "MOSHIMO_FURUSATO_NIPPON": "https://af.moshimo.com/af/c/click?a_id=5542709&p_id=3172&pc_id=7409&pl_id=41472",
 }
 
 # ── インラインスタイル定義 ──
@@ -195,6 +202,24 @@ PRESETS = {
         "card": dict(label="フリーランス求人", title="IT求人ナビ：独立後の単価帯を確認", desc="エンジニア向けの高単価フリーランス案件を多数掲載。", benefits=["月単価150万〜の案件多数", "リモート案件あり", "独立支援サポート"], btn="IT求人ナビで案件を見る"),
         "inline": dict(anchor_text="IT求人ナビ フリーランス"),
         "bottom": dict(brand_name="IT求人ナビ フリーランス", title="完済後のキャリア戦略：独立という選択肢", quote="任意整理 → 完済 → 信用情報が回復するまで5年。その間にスキルを上げて、フリーランスとして単価を3倍にする戦略は十分現実的。", benefits=["月単価150万〜", "リモート可", "独立支援", "案件豊富"], btn="IT求人ナビで案件を見る"),
+    },
+    "MOSHIMO_RAKUTEN_ICHIBA": {
+        "hero": dict(label="楽天市場", title="楽天市場：日用品・健康・美容まで日常の買い物で還元", desc="楽天ポイント還元、5と0の付く日エントリーで還元率アップ、送料無料商品多数。", btn="楽天市場で探す"),
+        "card": dict(label="楽天市場", title="日常の買い物を楽天に集約してポイント貯める", desc="プロテイン・サプリ・美容家電・生活雑貨まで一括。SPU で還元率アップ。", benefits=["楽天ポイント還元", "5と0の付く日でお得", "送料無料商品多数"], btn="楽天市場で探す"),
+        "inline": dict(anchor_text="楽天市場（ポイント還元）"),
+        "bottom": dict(brand_name="楽天市場", title="生活費全部を「ポイント還元の通る道」に", quote="日用品・健康・美容、ふるさと納税まで楽天で買う癖をつけたら、月の固定費が実質3〜5%下がる。完済への道のりが少し短くなる。", benefits=["楽天ポイント", "送料無料", "セール時さらにお得", "汎用EC"], btn="楽天市場で探す"),
+    },
+    "MOSHIMO_YAHOO_SHOPPING": {
+        "hero": dict(label="Yahoo!ショッピング", title="Yahoo!ショッピング：PayPay還元で日用品をお得に", desc="PayPayステップ＋日曜日でさらに還元率アップ。送料無料ストア多数。", btn="Yahoo!ショッピングで探す"),
+        "card": dict(label="Yahoo!ショッピング", title="PayPay還元を活かして日用品を購入", desc="PayPay経済圏ユーザーは楽天よりこちらが有利。", benefits=["PayPay還元", "日曜日にエントリーで上乗せ", "PayPayステップで還元アップ"], btn="Yahoo!ショッピングで探す"),
+        "inline": dict(anchor_text="Yahoo!ショッピング（PayPay還元）"),
+        "bottom": dict(brand_name="Yahoo!ショッピング", title="楽天派かPayPay派かで使い分ける", quote="楽天とYahoo!ショッピング、両方にアカウント作って使い分けるだけで還元の取り損ねが減る。固定費削減と同じ効果。", benefits=["PayPay還元", "日曜日特典", "送料無料ストア", "汎用EC"], btn="Yahoo!ショッピングで探す"),
+    },
+    "MOSHIMO_FURUSATO_NIPPON": {
+        "hero": dict(label="ふるさと納税", title="ふるさと納税ニッポン：レビュー数No.1", desc="返礼品レビュー数日本最大級。実際に届いた写真とレビューで失敗が減る。", btn="ふるさと納税ニッポンで探す"),
+        "card": dict(label="ふるさと納税", title="ふるさと納税ニッポンで返礼品を選ぶ", desc="レビュー数の多さで失敗を減らせる、初心者向け。", benefits=["レビュー数No.1", "ジャンル別検索が強い", "実質2,000円で返礼品"], btn="ふるさと納税ニッポンで探す"),
+        "inline": dict(anchor_text="ふるさと納税ニッポン"),
+        "bottom": dict(brand_name="ふるさと納税ニッポン", title="任意整理中でも、ふるさと納税は使える", quote="ふるさと納税は所得税・住民税の控除なので、任意整理中の俺でも問題なく使える。年収400万なら年4万くらい返礼品で取れる。生活費の補填として確実に効く。", benefits=["レビューNo.1", "ジャンル別検索", "実質2,000円", "ブラックOK"], btn="ふるさと納税ニッポンで探す"),
     },
 }
 
