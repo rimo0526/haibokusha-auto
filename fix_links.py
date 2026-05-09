@@ -25,7 +25,10 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 try:
-    from inject_affiliate_links import AFFILIATE_LINKS
+    from inject_affiliate_links import links_for_site
+    # fix_links.py は haibokusha 用ワークフローからのみ呼ばれるので、
+    # haibokusha で使えるキーのみで構築する（compass 専用キーは「未定義」扱いに）。
+    AFFILIATE_LINKS = links_for_site("haibokusha")
 except ImportError:
     AFFILIATE_LINKS = {}
 

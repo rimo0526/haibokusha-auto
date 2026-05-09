@@ -197,11 +197,13 @@ AFFILIATE_LINKS: Dict[str, str] = {
     "INVEST_MENDAN":       "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BG00XU+40OC+BWVTE",  # 投資個人面談
 
     # フィットネス・ボディメイク・美容（4件）
-    # 5/9 ペルソナ判定: HABIT/B-CONCEPT/脱毛体験 は両ペルソナと不整合 → 削除（CTAに使わない）
-    # "FITNESS_HABIT":     "...",  # 削除：芸能人向け高級パーソナル（東京限定）
-    # "FITNESS_BCONCEPT":  "...",  # 削除：女性限定ボディメイク
-    # "BIYO_DATSUMO":      "...",  # 削除：美容軸（脱毛体験）
-    "FITNESS_CLOUD_GYM":   "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BTOZUQ+4RUO+5YJRM",  # CLOUD GYM（Compass のみ採用）
+    # 5/9 ペルソナ判定 v2（Compass を「生活改善ハブ」に拡張、health-beauty カテゴリ新設）：
+    # FITNESS_BCONCEPT / BIYO_DATSUMO は Compass 専用で再採用
+    # FITNESS_HABIT は高級・東京限定でROI不確定 → 保留（コメントアウト維持）
+    # "FITNESS_HABIT":     "...",  # 保留：高級・東京限定。後続案件次第で再評価
+    "FITNESS_BCONCEPT":    "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BUAFGI+3UK2+5YJRM",  # B-CONCEPT 女性向けボディメイク（Compass 女性向け記事限定）
+    "BIYO_DATSUMO":        "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BVHAO2+1OGO+HV7V6",  # 脱毛体験（Compass 美容記事専用）
+    "FITNESS_CLOUD_GYM":   "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BTOZUQ+4RUO+5YJRM",  # CLOUD GYM（Compass 採用）
 
     # ── 5/9 新規追加：電気・ガス（kounetsuhi 4社） ──
     "DENKI_ARCANA":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1NJETE+5HNU+5YJRM",  # アルカナでんき
@@ -212,6 +214,11 @@ AFFILIATE_LINKS: Dict[str, str] = {
     # ── 5/9 新規追加：転職・フリーランス（tenshoku/fukugyo 1社） ──
     "IT_KYUJIN_FREELANCE": "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1SD4Y+4LXM+5YJRM",  # IT求人ナビ フリーランス
 
+    # ── 5/9 新規追加：もしも EC・汎用（3社、両サイト共通利用） ──
+    "MOSHIMO_RAKUTEN_ICHIBA":  "https://af.moshimo.com/af/c/click?a_id=5542698&p_id=54&pc_id=54&pl_id=621",       # 楽天市場（マルチカテゴリ汎用）
+    "MOSHIMO_YAHOO_SHOPPING":  "https://af.moshimo.com/af/c/click?a_id=5542704&p_id=1225&pc_id=1925&pl_id=18502",  # Yahoo!ショッピング
+    "MOSHIMO_FURUSATO_NIPPON": "https://af.moshimo.com/af/c/click?a_id=5542709&p_id=3172&pc_id=7409&pl_id=41472",  # ふるさと納税ニッポン
+
     # ── 提携承認待ち（URL 来るまで空のまま、placeholder 残留） ──
     "BENGOSHI_ADIRE": "",   # アディーレ（A8 該当案件なし、他の弁護士で代替）
     "RAKUTEN_SHOKEN": "",
@@ -221,6 +228,73 @@ AFFILIATE_LINKS: Dict[str, str] = {
     "STUDYING": "",       # スタディング
     "AMAZON_BOOK": "",    # Amazonアソシエイト（審査中：5/12〜）
 }
+
+# ───────────────────────────────────────────────────────────
+# サイト振り分け（usable_sites）
+# どのアフィキーがどのサイトで使えるかを宣言する。
+# 未指定キーは _DEFAULT_USABLE_SITES が適用される＝両サイト OK の広めデフォルト。
+# 採点しながら絞り込んでいく運用：誤った組み合わせが見えたら override に追記。
+# ───────────────────────────────────────────────────────────
+
+_DEFAULT_USABLE_SITES: List[str] = ["haibokusha", "compass"]
+
+USABLE_SITES_OVERRIDE: Dict[str, List[str]] = {
+    # ── haibokusha 専用（敗北者・債務整理ペルソナ向け、compass FIRE層には合わない）
+    "BENGOSHI_HIRAYANAGI": ["haibokusha"],
+    "BENGOSHI_ABIES":      ["haibokusha"],
+    "BENGOSHI_SAKURA":     ["haibokusha"],
+    "BENGOSHI_KOUKAI":     ["haibokusha"],
+    "BENGOSHI_LADIES":     ["haibokusha"],
+    "BENGOSHI_EARTH":      ["haibokusha"],
+    "BENGOSHI_ADIRE":      ["haibokusha"],
+    # キャッシング・自社ローン（"最後の手段"枠、compass の人生改善文脈には不適）
+    "KASHIKINE_FUKUHO":    ["haibokusha"],
+    "KASHIKINE_NEXUS":     ["haibokusha"],
+    "KASHIKINE_CENTRAL":   ["haibokusha"],
+    "KASHIKINE_ARROW":     ["haibokusha"],
+    "KASHIKINE_SOKUJITSU": ["haibokusha"],
+    "KASHIKINE_NICHIDEN":  ["haibokusha"],
+    "KASHIKINE_DAILY":     ["haibokusha"],
+    "KASHIKINE_GENKI":     ["haibokusha"],
+    "RAKUTEN_DEBIT":       ["haibokusha"],
+    "SIM_DAREDEMO_MOBILE": ["haibokusha"],  # 審査なしSIMは敗北者ペルソナ直撃、FIRE層には不要
+    "SIM_LYPRIMO":         ["haibokusha"],
+
+    # ── compass 専用（生活改善ハブ向け、haibokusha 敗北者ペルソナとは温度差）
+    "RIZAP":                ["compass"],
+    "FITNESS_BCONCEPT":     ["compass"],
+    "FITNESS_CLOUD_GYM":    ["compass"],
+    "BIYO_DATSUMO":         ["compass"],
+    "GAKUSHU_KENKO":        ["compass"],
+    "GAKUSHU_BIYO":         ["compass"],
+    "GAKUSHU_SKINCARE_S":   ["compass"],
+    "GAKUSHU_SKINCARE_A":   ["compass"],
+    "GAKUSHU_TENNENSEKI":   ["compass"],
+
+    # ── B2B（事業者向け、両サイトのペルソナいずれにも近くないが文脈次第で使える）
+    # ここでは "両OK" デフォルトのまま放置。記事側で文脈合えば使う／なければ使わない。
+}
+
+
+def usable_sites_of(key: str) -> List[str]:
+    """指定キーが使えるサイト名リストを返す。未指定キーはデフォルト適用。"""
+    return USABLE_SITES_OVERRIDE.get(key, _DEFAULT_USABLE_SITES)
+
+
+def links_for_site(site: str) -> Dict[str, str]:
+    """指定サイト向けに有効な KEY→URL の単純 dict を返す（apply_replacements 互換）。
+
+    - URL が空のキー（提携承認待ち）は除外
+    - usable_sites に site を含まないキーは除外
+    """
+    out = {}
+    for key, url in AFFILIATE_LINKS.items():
+        if not url:
+            continue
+        if site in usable_sites_of(key):
+            out[key] = url
+    return out
+
 
 # 対象ディレクトリ
 REPO_ROOT = Path(__file__).resolve().parents[2]    # 企業案/

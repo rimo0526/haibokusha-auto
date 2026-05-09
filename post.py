@@ -33,7 +33,9 @@ from eyecatch import generate_eyecatch_png, category_to_label
 from illustrations import inject_illustrations
 from inject_ctas import inject_ctas
 try:
-    from inject_affiliate_links import AFFILIATE_LINKS, apply_replacements
+    from inject_affiliate_links import links_for_site, apply_replacements
+    # haibokusha 向けに使える placeholder のみで site フィルタ済の dict を構築
+    AFFILIATE_LINKS = links_for_site("haibokusha")
 except ImportError:
     AFFILIATE_LINKS = {}
     def apply_replacements(text, links, only=None):
