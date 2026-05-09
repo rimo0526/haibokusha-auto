@@ -1,11 +1,20 @@
-"""WP公開記事のアビエス法律事務所画像URLを co_logo.webp に統一する。
+"""WP公開記事のアビエス法律事務所バナーを A8 公式素材（300x250、5YZ75ペア）に統一する。
 
-検出と置換対象：
-  - https://www.abies-law.jp/img/img/co_favicon.webp  （486 で投稿された旧 favicon）
-  - https://www.abies-law.jp/img/img/co_logo.png      （存在せず 404 になる旧URL）
+A8 公式素材は image+click URL のペアで A8 が impression/click 計測を行うので、
+両方をセットで置換する。
 
-これら両方を以下の正常 URL に置換する：
-  - https://www.abies-law.jp/img/img/co_logo.webp     （実際にサイトに存在する公式ロゴ）
+検出・置換対象（image）：
+  - https://www.abies-law.jp/img/img/co_favicon.webp  （旧 favicon、486で投稿）
+  - https://www.abies-law.jp/img/img/co_logo.png      （404 broken）
+  - https://www.abies-law.jp/img/img/co_logo.webp     （公式サイトロゴ、暫定使用）
+   ↓
+  - https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1
+    （A8 公式 300x250 バナー）
+
+検出・置換対象（click URL）：
+  - https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM （5YJRM、旧素材ID）
+   ↓
+  - https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YZ75 （5YZ75、A8 公式バナーとペア）
 
 SiteGuard 対策で wp_update は POST + X-HTTP-Method-Override: PUT を使う。
 
@@ -31,10 +40,26 @@ WP_USERNAME = os.environ.get("WP_USERNAME", "")
 WP_APP_PASSWORD = os.environ.get("WP_APP_PASSWORD", "")
 
 OLD_URLS = [
+    # image URLs
     "https://www.abies-law.jp/img/img/co_favicon.webp",
     "https://www.abies-law.jp/img/img/co_logo.png",
+    "https://www.abies-law.jp/img/img/co_logo.webp",
+    # click URL（古い 5YJRM 素材ID。新しい 5YZ75 ペアに統一）
+    "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM",
 ]
-NEW_URL = "https://www.abies-law.jp/img/img/co_logo.webp"
+# 「URL 種別ごとに新しい URL が違う」点を扱うため、from→to のマッピング dict にする。
+# OLD_URLS は後方互換用に残す。
+URL_REPLACEMENTS = {
+    "https://www.abies-law.jp/img/img/co_favicon.webp":
+        "https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1",
+    "https://www.abies-law.jp/img/img/co_logo.png":
+        "https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1",
+    "https://www.abies-law.jp/img/img/co_logo.webp":
+        "https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1",
+    "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM":
+        "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YZ75",
+}
+NEW_URL = "https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1"  # 後方互換
 
 
 def auth_header():
@@ -67,15 +92,15 @@ def wp_update(post_id, payload):
 
 
 def fix_content(html: str) -> tuple:
-    """HTML エンティティを実体化してから旧URLを new に置換。
+    """HTML エンティティを実体化してから URL_REPLACEMENTS の各エントリで置換。
     戻り値: (new_html, replacements_per_url_dict)"""
     new = html_lib.unescape(html)
     counts = {}
-    for old in OLD_URLS:
-        n = new.count(old)
+    for old_url, new_url in URL_REPLACEMENTS.items():
+        n = new.count(old_url)
         if n > 0:
-            new = new.replace(old, NEW_URL)
-            counts[old] = n
+            new = new.replace(old_url, new_url)
+            counts[old_url] = n
     return new, counts
 
 
@@ -156,18 +181,16 @@ def main():
         try:
             res = wp_update(pid, {"content": new_content})
             updated_content = res.get("content", {}).get("rendered", "")
-            still_old = sum(updated_content.count(u) for u in OLD_URLS)
-            new_present = updated_content.count(NEW_URL)
-            print(f"  id={pid} ✓ PUT ok | new_url_count={new_present} still_old={still_old}", flush=True)
+            still_old = sum(updated_content.count(u) for u in URL_REPLACEMENTS)
+            print(f"  id={pid} ✓ PUT ok | still_old={still_old}", flush=True)
 
             time.sleep(0.3)
             check = http_get(f"/wp-json/wp/v2/posts/{pid}?_fields=content")
             check_content = check.get("content", {}).get("rendered", "")
-            check_old = sum(check_content.count(u) for u in OLD_URLS)
-            check_new = check_content.count(NEW_URL)
-            ok = check_old == 0 and check_new >= sum(counts.values())
+            check_old = sum(check_content.count(u) for u in URL_REPLACEMENTS)
+            ok = check_old == 0
             mark = "OK" if ok else "VERIFY-FAIL"
-            print(f"  id={pid} verify: old_remaining={check_old} new_present={check_new} [{mark}]", flush=True)
+            print(f"  id={pid} verify: old_remaining={check_old} [{mark}]", flush=True)
             if ok:
                 success += 1
             else:

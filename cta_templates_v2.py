@@ -8,7 +8,7 @@ WP の KSES sanitizer は <style> ブロックを剥がす可能性があるた�
 BRAND_IMAGES = {
     "DMM_KABU":            "https://kabu.dmm.com/_img/og/common_230120.png",
     "KASHIKINE_NEXUS":     "https://apply.mycredit.nexuscard.co.jp/lp/common/images/apple-touch-icon.png",
-    "BENGOSHI_ABIES":      "https://www.abies-law.jp/img/img/co_logo.webp",
+    "BENGOSHI_ABIES":      "https://www27.a8.net/svt/bgt?aid=251021005499&wid=003&eno=01&mid=s00000027079001003000&mc=1",
     "COCONALA":            "https://coconala.com/images/facebook.png",
     "LIGHT_FX":            "https://lightfx.jp/images/social/facebook.jpg",
     # 5/9 新規追加（電気・ガス + フリーランス求人）
@@ -26,7 +26,7 @@ BRAND_IMAGES = {
 BRAND_URLS = {
     "DMM_KABU":            "https://px.a8.net/svt/ejp?a8mat=4B3LMU+759KY+1WP2+15QHIA",
     "KASHIKINE_NEXUS":     "https://px.a8.net/svt/ejp?a8mat=45G6PM+9ZLVPE+4T5W+5YJRM",
-    "BENGOSHI_ABIES":      "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM",
+    "BENGOSHI_ABIES":      "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YZ75",
     "COCONALA":            "https://px.a8.net/svt/ejp?a8mat=4B3LMU+18NKOY+2PEO+OECDE",
     "LIGHT_FX":            "https://px.a8.net/svt/ejp?a8mat=3BDWT8+FDP656+46VO+5YJRM",
     "DENKI_ARCANA":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1NJETE+5HNU+5YJRM",

@@ -57,7 +57,7 @@ AFFILIATE_LINKS: Dict[str, str] = {
 
     # 弁護士・司法書士・債務整理
     "BENGOSHI_HIRAYANAGI": "https://px.a8.net/svt/ejp?a8mat=4B3LMT+FPLV0I+4IB2+614CY",  # 平柳司法書士事務所
-    "BENGOSHI_ABIES":      "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM",  # アビエス法律事務所
+    "BENGOSHI_ABIES":      "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YZ75",  # アビエス法律事務所（A8 official 300x250 banner ペア）
     "BENGOSHI_SAKURA":     "https://px.a8.net/svt/ejp?a8mat=45G91P+8AA8EA+5T5G+5YJRM",  # さくら中央法律事務所
     "BENGOSHI_KOUKAI":     "https://px.a8.net/svt/ejp?a8mat=45G91P+89OSSI+4FR4+5YRHE",  # 後悔しない任意整理
     "BENGOSHI_LADIES":     "https://px.a8.net/svt/ejp?a8mat=4B3LMT+FNTK76+38S6+61C2Q",  # レディースフタバ
