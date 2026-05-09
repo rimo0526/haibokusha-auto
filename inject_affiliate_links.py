@@ -197,10 +197,20 @@ AFFILIATE_LINKS: Dict[str, str] = {
     "INVEST_MENDAN":       "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BG00XU+40OC+BWVTE",  # 投資個人面談
 
     # フィットネス・ボディメイク・美容（4件）
-    "FITNESS_HABIT":       "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BRWP1E+56HC+5YRHE",  # HABIT
-    "FITNESS_CLOUD_GYM":   "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BTOZUQ+4RUO+5YJRM",  # CLOUD GYM
-    "FITNESS_BCONCEPT":    "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BUAFGI+3UK2+5YJRM",  # B-CONCEPT（女性向け）
-    "BIYO_DATSUMO":        "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BVHAO2+1OGO+HV7V6",  # 脱毛体験
+    # 5/9 ペルソナ判定: HABIT/B-CONCEPT/脱毛体験 は両ペルソナと不整合 → 削除（CTAに使わない）
+    # "FITNESS_HABIT":     "...",  # 削除：芸能人向け高級パーソナル（東京限定）
+    # "FITNESS_BCONCEPT":  "...",  # 削除：女性限定ボディメイク
+    # "BIYO_DATSUMO":      "...",  # 削除：美容軸（脱毛体験）
+    "FITNESS_CLOUD_GYM":   "https://px.a8.net/svt/ejp?a8mat=4B3LMU+BTOZUQ+4RUO+5YJRM",  # CLOUD GYM（Compass のみ採用）
+
+    # ── 5/9 新規追加：電気・ガス（kounetsuhi 4社） ──
+    "DENKI_ARCANA":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1NJETE+5HNU+5YJRM",  # アルカナでんき
+    "DENKI_ELPIO":         "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1OQA0Y+4AXS+5YJRM",  # エルピオでんき
+    "DENKI_SUSTAIN":       "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1VVHAA+4RKE+5YJRM",  # サステナブルでんき
+    "DENKI_CHOICE":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1WGWW2+3SPO+TRVYQ",  # 電気チョイス（比較サイト）
+
+    # ── 5/9 新規追加：転職・フリーランス（tenshoku/fukugyo 1社） ──
+    "IT_KYUJIN_FREELANCE": "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1SD4Y+4LXM+5YJRM",  # IT求人ナビ フリーランス
 
     # ── 提携承認待ち（URL 来るまで空のまま、placeholder 残留） ──
     "BENGOSHI_ADIRE": "",   # アディーレ（A8 該当案件なし、他の弁護士で代替）

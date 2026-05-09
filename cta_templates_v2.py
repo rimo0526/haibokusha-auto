@@ -1,23 +1,42 @@
-"""画像付きCTA 4タイプ テンプレート定義 (TPO別) - インラインstyle版."""
+"""画像付きCTA 4タイプ テンプレート定義 (TPO別) - インラインstyle版.
 
+WP の KSES sanitizer は <style> ブロックを剥がす可能性があるため、
+全てのスタイルを style="..." 属性として要素に直接付与する。
+"""
+
+# 各アフィの公式 OG 画像 URL（公開アクセス可、social embed 用に提供されているもの）
 BRAND_IMAGES = {
-    "DMM_KABU":         "https://kabu.dmm.com/_img/og/common_230120.png",
-    "KASHIKINE_NEXUS":  "https://apply.mycredit.nexuscard.co.jp/lp/common/images/apple-touch-icon.png",
-    "BENGOSHI_ABIES":   "https://www.abies-law.jp/img/img/co_favicon.webp",
-    "COCONALA":         "https://coconala.com/images/facebook.png",
-    "LIGHT_FX":         "https://lightfx.jp/images/social/facebook.jpg",
+    "DMM_KABU":            "https://kabu.dmm.com/_img/og/common_230120.png",
+    "KASHIKINE_NEXUS":     "https://apply.mycredit.nexuscard.co.jp/lp/common/images/apple-touch-icon.png",
+    "BENGOSHI_ABIES":      "https://www.abies-law.jp/img/img/co_favicon.webp",
+    "COCONALA":            "https://coconala.com/images/facebook.png",
+    "LIGHT_FX":            "https://lightfx.jp/images/social/facebook.jpg",
+    # 5/9 新規追加（電気・ガス + フリーランス求人）
+    "DENKI_ARCANA":        "https://arcana-energy.co.jp/favicon.png",
+    "DENKI_ELPIO":         "https://www.lpio.jp/wp-content/uploads/2023/02/logo-s.png",
+    "DENKI_SUSTAIN":       "https://www.netenergy.jp/img/favicon.ico",
+    "DENKI_CHOICE":        "https://user.denkichoice.jp/favicon.ico",
+    "IT_KYUJIN_FREELANCE": "https://it-kyujin.jp/wp-content/uploads/2025/01/h0003.webp",
 }
 
 BRAND_URLS = {
-    "DMM_KABU":         "https://px.a8.net/svt/ejp?a8mat=4B3LMU+759KY+1WP2+15QHIA",
-    "KASHIKINE_NEXUS":  "https://px.a8.net/svt/ejp?a8mat=45G6PM+9ZLVPE+4T5W+5YJRM",
-    "BENGOSHI_ABIES":   "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM",
-    "COCONALA":         "https://px.a8.net/svt/ejp?a8mat=4B3LMU+18NKOY+2PEO+OECDE",
-    "LIGHT_FX":         "https://px.a8.net/svt/ejp?a8mat=3BDWT8+FDP656+46VO+5YJRM",
+    "DMM_KABU":            "https://px.a8.net/svt/ejp?a8mat=4B3LMU+759KY+1WP2+15QHIA",
+    "KASHIKINE_NEXUS":     "https://px.a8.net/svt/ejp?a8mat=45G6PM+9ZLVPE+4T5W+5YJRM",
+    "BENGOSHI_ABIES":      "https://px.a8.net/svt/ejp?a8mat=45G91P+893D6Q+5SXY+5YJRM",
+    "COCONALA":            "https://px.a8.net/svt/ejp?a8mat=4B3LMU+18NKOY+2PEO+OECDE",
+    "LIGHT_FX":            "https://px.a8.net/svt/ejp?a8mat=3BDWT8+FDP656+46VO+5YJRM",
+    "DENKI_ARCANA":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1NJETE+5HNU+5YJRM",
+    "DENKI_ELPIO":         "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1OQA0Y+4AXS+5YJRM",
+    "DENKI_SUSTAIN":       "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1VVHAA+4RKE+5YJRM",
+    "DENKI_CHOICE":        "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1WGWW2+3SPO+TRVYQ",
+    "IT_KYUJIN_FREELANCE": "https://px.a8.net/svt/ejp?a8mat=4B3MEQ+1SD4Y+4LXM+5YJRM",
 }
 
+# ── インラインスタイル定義 ──
 S = {
+    # コンテナ共通
     "wrap":   "display:block;margin:32px 0;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Hiragino Kaku Gothic ProN,Meiryo,sans-serif;line-height:1.7;box-sizing:border-box;",
+    # Hero
     "hero":          "background:linear-gradient(135deg,#1E3A5F 0%,#2C5078 100%);color:#fff;padding:0;box-shadow:0 4px 16px rgba(30,58,95,.25);",
     "hero_inner":    "display:flex;align-items:stretch;flex-wrap:wrap;",
     "hero_img":      "flex:1 1 200px;background:#fff;padding:18px;display:flex;align-items:center;justify-content:center;min-height:140px;",
@@ -27,6 +46,7 @@ S = {
     "hero_title":    "font-size:18px;font-weight:700;margin:0 0 8px;color:#fff;line-height:1.4;",
     "hero_desc":     "font-size:14px;margin:0 0 14px;color:#E8EFF7;",
     "hero_btn":      "display:inline-block;background:#C56A4E;color:#fff;font-weight:700;padding:10px 22px;border-radius:6px;font-size:15px;text-decoration:none;",
+    # Card
     "card":          "background:#fff;border:1px solid #DDE3EC;box-shadow:0 2px 8px rgba(0,0,0,.06);",
     "card_imgwrap":  "width:100%;background:#F7F3EC;padding:20px;text-align:center;",
     "card_imgwrap_im":"max-width:60%;max-height:90px;height:auto;",
@@ -36,6 +56,7 @@ S = {
     "card_desc":     "font-size:14px;margin:0 0 12px;color:#444;",
     "card_btn":      "display:block;background:#C56A4E;color:#fff;font-weight:700;text-align:center;padding:12px 16px;border-radius:6px;font-size:15px;text-decoration:none;",
     "card_disc":     "font-size:11px;color:#888;margin:8px 0 0;text-align:center;",
+    # Bottom
     "bottom":        "background:#F7F3EC;border:2px solid #C56A4E;padding:24px;text-align:center;",
     "bottom_top":    "display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;",
     "bottom_top_im": "width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;border:1px solid #DDE3EC;",
@@ -44,6 +65,7 @@ S = {
     "bottom_quote":  "font-size:14px;color:#444;background:#fff;padding:14px 18px;border-left:4px solid #C56A4E;text-align:left;margin:0 0 16px;border-radius:4px;",
     "bottom_btn":    "display:inline-block;background:linear-gradient(135deg,#C56A4E 0%,#E08263 100%);color:#fff;font-weight:800;padding:14px 32px;border-radius:8px;font-size:17px;box-shadow:0 4px 12px rgba(197,106,78,.3);text-decoration:none;",
     "bottom_disc":   "font-size:11px;color:#888;margin:14px 0 0;",
+    # ベネフィットリスト
     "ul":            "list-style:none;padding:0;margin:0 0 14px;",
     "li":            "padding:3px 0 3px 22px;font-size:13px;color:#1E3A5F;position:relative;",
 }
@@ -112,6 +134,7 @@ def cta_bottom(brand_key, brand_name, title, quote, benefits, btn):
     )
 
 
+# ── プリセット定義 ──
 PRESETS = {
     "DMM_KABU": {
         "hero": dict(label="新NISA口座", title="DMM株：手数料0円・スマホ完結のNISA口座", desc="国内株売買手数料0円、米国株も対応。新NISA成長投資枠OK。", btn="DMM株で口座開設"),
@@ -139,9 +162,39 @@ PRESETS = {
     },
     "LIGHT_FX": {
         "hero": dict(label="FX（投機注意）", title="LIGHT FX：FXの基礎を少額で勉強したい人へ", desc="※元本損失リスクあり。借金返済中の起死回生狙いには絶対NG。為替の仕組み学習用。", btn="LIGHT FX 公式サイトを見る"),
-        "card": dict(label="FX 学習用", title="LIGHT FX：少額から為替を体験する", desc="※元本損失リスク高い投機。借金返済中の人は基本NGだが、為替の仕組みを学ぶには使える。", benefits=["少額からスタート可能", "高機能取引ツール", "スワップ高水準"], btn="LIGHT FX 詳細を見る"),
+        "card": dict(label="FX 学習用 (リスク注意)", title="LIGHT FX：少額から為替を体験する", desc="※元本損失リスク高い投機。借金返済中の人は基本NGだが、為替の仕組みを学ぶには使える。", benefits=["少額からスタート可能", "高機能取引ツール", "スワップ高水準"], btn="LIGHT FX 詳細を見る"),
         "inline": dict(anchor_text="LIGHT FX（投機注意）"),
         "bottom": dict(brand_name="LIGHT FX", title="FXは「起死回生」じゃなく「学習」で触る", quote="ガチャと同じで、FXに「これで一発逆転」を期待した瞬間に終わる。俺は借金返済中はFXに触らない。完済後、為替の仕組みを学ぶ目的で少額触るかも、という距離感。", benefits=["少額OK", "学習用", "スワップ高め", "国内大手"], btn="LIGHT FX 公式サイト"),
+    },
+    "DENKI_ARCANA": {
+        "hero": dict(label="新電力", title="アルカナでんき：単身世帯の電気代を削る", desc="任意整理中こそ固定費の見直し。新電力で月数百〜数千円カット。", btn="アルカナでんき 詳細を見る"),
+        "card": dict(label="新電力", title="アルカナでんき：契約手数料0円で切替シンプル", desc="基本料金0円プランあり。WEB完結で工事不要。", benefits=["基本料金0円プラン", "工事不要・解約金なし", "WEB申込で完結"], btn="アルカナでんきを申込む"),
+        "inline": dict(anchor_text="アルカナでんき（新電力）"),
+        "bottom": dict(brand_name="アルカナでんき", title="電気代の固定費削減は今日から", quote="任意整理中の俺は、固定費を削るほど完済が早まる。電力会社の切替は10分で済む。リスクほぼゼロで月数百〜数千円が浮く。", benefits=["基本料金0円", "工事不要", "解約金なし"], btn="アルカナでんきに切替"),
+    },
+    "DENKI_ELPIO": {
+        "hero": dict(label="新電力", title="エルピオでんき：全国対応・ファミリー向け新電力", desc="使用量が多い世帯ほど削減効果大。任意整理中の家計圧縮に。", btn="エルピオでんき 詳細を見る"),
+        "card": dict(label="新電力", title="エルピオでんき：使用量多い家庭に強い", desc="ファミリー世帯の電気代削減に向く料金プラン。", benefits=["全国対応", "使用量多いほど削減効果大", "解約金なしプランあり"], btn="エルピオでんきを申込む"),
+        "inline": dict(anchor_text="エルピオでんき（新電力）"),
+        "bottom": dict(brand_name="エルピオでんき", title="家族の電気代、月3,000円下げ", quote="ファミリー向けプランは大手より体感で月2,000〜5,000円安い。任意整理中の家計に直接効く。", benefits=["全国対応", "ファミリー向け", "解約金なし"], btn="エルピオに切替"),
+    },
+    "DENKI_SUSTAIN": {
+        "hero": dict(label="新電力", title="サステナブルでんき：環境配慮型の電力", desc="再エネ比率高め。電気代削減と環境配慮を両立。", btn="サステナブルでんき 詳細を見る"),
+        "card": dict(label="新電力", title="サステナブルでんき：環境配慮派にも", desc="再エネ比率の高い電力プラン。料金も大手より割安。", benefits=["再エネ比率高め", "大手より割安", "WEB申込で簡単"], btn="サステナブルでんきを申込む"),
+        "inline": dict(anchor_text="サステナブルでんき（新電力）"),
+        "bottom": dict(brand_name="サステナブルでんき", title="環境配慮しながら電気代も下げる", quote="再エネ比率高めで料金も大手より割安。「環境にいいことしながら家計も助かる」気持ちで切り替えられる。", benefits=["再エネ電源", "割安料金", "WEB完結"], btn="サステナブルでんきに切替"),
+    },
+    "DENKI_CHOICE": {
+        "hero": dict(label="電力会社 比較", title="電気チョイス：複数社を一括比較", desc="自分の地域・使用量で最安の電力会社を比較サイトで一発判定。", btn="電気チョイスで比較する"),
+        "card": dict(label="電力会社 比較", title="電気チョイスで最適な電力会社を診断", desc="郵便番号と使用量を入れるだけで複数社の見積もりを一括取得。", benefits=["複数社の比較が無料", "地域別・使用量別の最安", "切替手続きもサポート"], btn="電気チョイスで比較"),
+        "inline": dict(anchor_text="電気チョイス（電力会社 比較）"),
+        "bottom": dict(brand_name="電気チョイス", title="どの電力会社がベストか、5分でわかる", quote="自分で1社1社調べるのは無理。比較サイトで地域と使用量を入れて、最安3社を出してもらうのが最速。", benefits=["無料比較", "地域別最適化", "切替サポート"], btn="電気チョイスで無料比較"),
+    },
+    "IT_KYUJIN_FREELANCE": {
+        "hero": dict(label="フリーランス独立", title="IT求人ナビ フリーランス：会社員→独立の現実的ルート", desc="副業から本格独立まで、エンジニアの案件を月150万〜の単価帯で紹介。", btn="IT求人ナビ で案件を見る"),
+        "card": dict(label="フリーランス求人", title="IT求人ナビ：独立後の単価帯を確認", desc="エンジニア向けの高単価フリーランス案件を多数掲載。", benefits=["月単価150万〜の案件多数", "リモート案件あり", "独立支援サポート"], btn="IT求人ナビで案件を見る"),
+        "inline": dict(anchor_text="IT求人ナビ フリーランス"),
+        "bottom": dict(brand_name="IT求人ナビ フリーランス", title="完済後のキャリア戦略：独立という選択肢", quote="任意整理 → 完済 → 信用情報が回復するまで5年。その間にスキルを上げて、フリーランスとして単価を3倍にする戦略は十分現実的。", benefits=["月単価150万〜", "リモート可", "独立支援", "案件豊富"], btn="IT求人ナビで案件を見る"),
     },
 }
 
@@ -155,4 +208,5 @@ def make_cta(brand_key, layout):
     raise ValueError(layout)
 
 
+# 互換のため空文字列で残しておく（fix_cta_v2.py が import）
 CTA_STYLE_BLOCK = ""
