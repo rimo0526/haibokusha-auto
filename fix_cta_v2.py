@@ -189,8 +189,18 @@ def main():
     p.add_argument("--only-id", type=int, default=0, help="特定のpost ID のみ処理")
     args = p.parse_args()
 
+    # 起動時診断（GitHub Actions のログから原因切り分けするため）
+    print(f"[startup] argv={sys.argv}", flush=True)
+    print(f"[startup] env WP_URL set={bool(WP_URL)} len={len(WP_URL)}", flush=True)
+    print(f"[startup] env WP_USERNAME set={bool(WP_USERNAME)} len={len(WP_USERNAME)}", flush=True)
+    print(f"[startup] env WP_APP_PASSWORD set={bool(WP_APP_PASSWORD)} len={len(WP_APP_PASSWORD)}", flush=True)
+
     if not (WP_URL and WP_USERNAME and WP_APP_PASSWORD):
-        print("env missing", file=sys.stderr); sys.exit(2)
+        missing = [n for n, v in [('WP_URL', WP_URL),
+                                  ('WP_USERNAME', WP_USERNAME),
+                                  ('WP_APP_PASSWORD', WP_APP_PASSWORD)] if not v]
+        print(f"env missing: {missing}", file=sys.stderr)
+        sys.exit(2)
 
     print("=" * 70)
     print(f" Mode: {'APPLY' if args.apply else 'DRY-RUN'}  limit={args.limit} only_id={args.only_id}")

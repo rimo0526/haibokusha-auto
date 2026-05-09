@@ -12,11 +12,11 @@ on:
           - dry
           - apply
       limit:
-        description: 'limit (0=all)'
+        description: '対象上限（0=全件）'
         required: false
         default: '0'
       only_id:
-        description: 'specific post ID only'
+        description: '特定 post ID のみ（空欄=全件）'
         required: false
         default: ''
 
@@ -37,8 +37,18 @@ jobs:
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
         run: |
+          set -x
+          # 空文字 limit/only_id で argparse が落ちないようガード
           ARGS=""
           if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
-          if [ "${{ inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
-          if [ -n "${{ inputs.only_id }}" ]; then ARGS="$ARGS --only-id ${{ inputs.only_id }}"; fi
+          if [ -n "${{ inputs.limit }}" ] && [ "${{ inputs.limit }}" != "0" ]; then
+            ARGS="$ARGS --limit ${{ inputs.limit }}"
+          fi
+          if [ -n "${{ inputs.only_id }}" ]; then
+            ARGS="$ARGS --only-id ${{ inputs.only_id }}"
+          fi
+          echo "Final ARGS: [$ARGS]"
+          echo "WP_URL set: ${WP_URL:+yes} (len=${#WP_URL})"
+          echo "WP_USERNAME set: ${WP_USERNAME:+yes} (len=${#WP_USERNAME})"
+          echo "WP_APP_PASSWORD set: ${WP_APP_PASSWORD:+yes} (len=${#WP_APP_PASSWORD})"
           python fix_cta_v2.py $ARGS
