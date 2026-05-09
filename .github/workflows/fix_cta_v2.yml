@@ -15,6 +15,10 @@ on:
         description: 'limit (0=all)'
         required: false
         default: '0'
+      only_id:
+        description: 'specific post ID only'
+        required: false
+        default: ''
 
 jobs:
   fix:
@@ -36,5 +40,5 @@ jobs:
           ARGS=""
           if [ "${{ inputs.apply }}" = "apply" ]; then ARGS="$ARGS --apply"; fi
           if [ "${{ inputs.limit }}" != "0" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          if [ -n "${{ inputs.only_id }}" ]; then ARGS="$ARGS --only-id ${{ inputs.only_id }}"; fi
           python fix_cta_v2.py $ARGS
-
