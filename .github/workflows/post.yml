@@ -9,6 +9,13 @@ on:
       - 'requirements.txt'
   workflow_dispatch:
 
+# 二重実行防止: 同一ワークフロー＋同一ブランチの並列実行を抑止する。
+# cancel-in-progress: false にして実行中ジョブを途中停止させない（POST 済み・ファイル
+# 移動前で停止されると整合性が崩れるため）。後続の push/dispatch はキューで待つ。
+concurrency:
+  group: wp-auto-post-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -22,6 +29,32 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Install Japanese fonts (for eyecatch PNG)
+        run: |
+          sudo apt-get update -qq
+          # NotoSansJP（JP専用）+ NotoCJK（フォールバック）+ IPAex（最終フォールバック）
+          sudo apt-get install -y --no-install-recommends \
+            fonts-noto-cjk \
+            fonts-noto-cjk-extra \
+            fonts-ipaexfont-gothic \
+            fonts-ipafont-gothic
+          # NotoSansJP-Bold.otf を直接ダウンロード（apt 版にJP単体が無い場合の保険）
+          sudo mkdir -p /usr/share/fonts/opentype/noto
+          if [ ! -f /usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf ]; then
+            sudo wget -q -O /usr/share/fonts/opentype/noto/NotoSansJP-Bold.otf \
+              "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Japanese/NotoSansJP-Bold.otf" || true
+          fi
+          if [ ! -f /usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf ]; then
+            sudo wget -q -O /usr/share/fonts/opentype/noto/NotoSansJP-Regular.otf \
+              "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Japanese/NotoSansJP-Regular.otf" || true
+          fi
+          sudo fc-cache -f -v
+          # 確認用ログ
+          fc-list :lang=ja | head -10 || true
+          echo "--- noto-cjk ttc files ---"
+          ls -la /usr/share/fonts/opentype/noto/ 2>/dev/null || true
+          ls -la /usr/share/fonts/truetype/noto/ 2>/dev/null || true
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -43,6 +76,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore: move published posts to posts/published/ [skip ci]"
+          # リモートの最新を取り込んでから push（衝突対策）
           for attempt in 1 2 3; do
             if git push origin main; then
               echo "Push succeeded on attempt $attempt"

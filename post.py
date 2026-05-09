@@ -71,6 +71,42 @@ def public_header() -> dict:
     }
 
 
+def check_existing_post(slug: str, title: str = '') -> bool:
+    """slug または title が既存の記事にあるかチェック。idempotency 用。
+
+    認証付き GET で publish/future/draft/private/pending を全部見る（予約投稿の
+    重複も検出するため）。slug 完全一致 → だめなら title 完全一致 で検索する。
+    既存記事の slug が日本語タイトルベースになっている過去データもこれで掴める。
+
+    例外発生時は True（スキップ）を返す＝重複POSTより誤スキップを優先。
+    """
+    statuses = 'publish,future,draft,private,pending'
+    try:
+        # Slug 完全一致（WP の REST API は slug クエリで完全一致検索）
+        r = requests.get(f'{WP_URL}/wp-json/wp/v2/posts',
+                         params={'slug': slug, 'per_page': 1, 'status': statuses},
+                         headers=auth_header(), timeout=30)
+        if r.ok and r.json():
+            return True
+
+        # Title 完全一致フォールバック（slug が日本語URLエンコード形式の旧記事用）
+        if title:
+            r = requests.get(f'{WP_URL}/wp-json/wp/v2/posts',
+                             params={'search': title, 'per_page': 10, 'status': statuses},
+                             headers=auth_header(), timeout=30)
+            if r.ok:
+                wanted = title.strip()
+                for p in r.json():
+                    rendered = (p.get('title') or {}).get('rendered', '').strip()
+                    if rendered == wanted:
+                        return True
+        return False
+    except Exception as e:
+        # ネットワーク/WAF エラー時は安全側に振る＝スキップして重複POSTを防ぐ
+        print(f'  ⚠ idempotency check failed, safe-skipping: {e}', file=sys.stderr)
+        return True
+
+
 # ── タクソノミー解決（カテゴリ・タグ） ─────────────
 def resolve_terms(taxonomy: str, names: list) -> list:
     """名前のリストを ID リストに変換。GET は無認証、POST(新規) は認証付き。"""
@@ -155,6 +191,13 @@ def post_article(path: Path) -> dict:
     excerpt = post.metadata.get('excerpt', '')
     cats = post.metadata.get('categories', [])
     tags = post.metadata.get('tags', [])
+
+    # Idempotency check: slug または title が既存なら skip
+    slug = post.metadata.get('slug') or path.stem
+    if check_existing_post(slug, title):
+        print(f'  ⚠ Skip: {title} (slug or title already exists)')
+        return {'skipped': True}
+
     # 予約公開対応: フロントマター `date` を ISO8601 文字列として受け取る
     # 例: date: 2026-05-08T07:00:00+09:00
     # status: future かつ未来日時なら、WordPress 側で予約公開される
@@ -208,6 +251,7 @@ def post_article(path: Path) -> dict:
         'content': html,
         'status': status,
         'excerpt': excerpt,
+        'slug': slug,
     }
     if cat_ids:
         payload['categories'] = cat_ids
@@ -243,10 +287,13 @@ def main():
     failed = False
     for path in new_posts:
         try:
-            post_article(path)
-            target = PUBLISHED_DIR / path.name
-            path.rename(target)
-            print(f'  Moved to {target}')
+            data = post_article(path)
+            if not data.get('skipped'):
+                target = PUBLISHED_DIR / path.name
+                path.rename(target)
+                print(f'  Moved to {target}')
+            else:
+                print(f'  Skipped: {path}')
         except Exception as e:
             print(f'✗ Failed: {path}: {e}', file=sys.stderr)
             failed = True
