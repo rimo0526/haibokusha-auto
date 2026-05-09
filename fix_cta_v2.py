@@ -1,19 +1,15 @@
-"""WP公開記事の旧CTAボックスを 画像付き新CTA(v2) に総入れ替えするスクリプト。
+"""WP公開記事の旧CTAを 画像付き v2 (Card+Hero+Bottom) に総入れ替え。
 
-戦略:
-  1. 旧 CTA `<h3 class="hb-cta-title">XXX...</h3> ... <small class="hb-cta-disclosure">...</small>` を
-     ブランド別キーで識別（XXX = 「DMM株」「Nexus Card」「アビエス」「ココナラ」「マネーフォワード」「楽天」など）
-  2. 該当範囲を 同ブランドの **タイプB(Card)** で置換 ← 「中盤の自然訴求」用
-  3. 加えて記事冒頭に **タイプA(Hero)** を1つ、末尾に **タイプD(Bottom)** を1つ追加（カテゴリに応じて）
-  4. 共通 <style> ブロックは記事冒頭に1度だけ挿入（重複検出して二重挿入回避）
-
-注意:
-  - WP は <div> 内に <p> を強制注入する → アンカー範囲を h3〜small に限定して柔軟に
-  - 重複適用防止: 既に hb-cta-v2 クラスを含む CTA があれば skip
+処方箋（5/9 ユーザー指示）：
+  1. 記事ごとにマッチ回数を必ずログに出す
+  2. html.unescape() で &amp; / &#8211; を実体化してから regex
+  3. PUT 後に GET し直して置換後の文字列が含まれているか verify
+  4. ローカルで完全テスト後に Actions push
 """
 
 import argparse
 import base64
+import html as html_lib
 import json
 import os
 import re
@@ -23,7 +19,6 @@ import urllib.parse
 import urllib.request
 
 from cta_templates_v2 import (
-    CTA_STYLE_BLOCK,
     BRAND_IMAGES,
     BRAND_URLS,
     PRESETS,
@@ -60,15 +55,7 @@ def wp_update(post_id, payload):
         return json.loads(r.read().decode("utf-8"))
 
 
-# ── 旧CTA識別パターン ──
-# h3.hb-cta-title 〜 small.hb-cta-disclosure までの範囲を検出
-# WPのTOC生成プラグインが <h3> 内に <span id="tocN"> を注入することがあるため、
-# h3 内側はワイルドカードで吸収する。
-def _h3_pat(brand_keyword: str):
-    """h3 class="hb-cta-title" に brand_keyword を含み、
-    その後の最初の <small class="hb-cta-disclosure">...</small> までを範囲とする。
-    h3内側に <span id="tocN">...</span> 等が注入されていても拾えるよう、
-    h3を開いてから brand_keyword に到達するまで何でも許可する。"""
+def _h3_pat(brand_keyword):
     return re.compile(
         r'<h3 class="hb-cta-title">[^<]*(?:<[^>]+>[^<]*)*?'
         + re.escape(brand_keyword)
@@ -77,69 +64,66 @@ def _h3_pat(brand_keyword: str):
     )
 
 
+def _anchor_pat(anchor_text):
+    return re.compile(
+        r'<h3 class="hb-cta-title">.*?'
+        + re.escape(anchor_text)
+        + r'.*?<small class="hb-cta-disclosure">[^<]*</small>',
+        re.DOTALL,
+    )
+
+
 PATTERN_TO_BRAND = [
-    (_h3_pat("DMM株"),               "DMM_KABU"),
-    (_h3_pat("Nexus Card"),          "KASHIKINE_NEXUS"),
-    (_h3_pat("アビエス"),             "BENGOSHI_ABIES"),
-    (_h3_pat("借金の悩み"),           "BENGOSHI_ABIES"),  # 旧 CTA_BENGOSHI_PRIMARY
-    (_h3_pat("ココナラ"),             "COCONALA"),
-    (_h3_pat("LIGHT FX"),            "LIGHT_FX"),
-    # 旧（fix_cta_mismatch 前に取り残された場合の保険）
-    (_h3_pat("楽天証券"),             "DMM_KABU"),
-    (_h3_pat("楽天銀行デビット"),      "KASHIKINE_NEXUS"),
-    (_h3_pat("マネーフォワード"),      "COCONALA"),
+    (_h3_pat("DMM株"),                "DMM_KABU", "h3:DMM株"),
+    (_h3_pat("Nexus Card"),                "KASHIKINE_NEXUS", "h3:Nexus"),
+    (_h3_pat("アビエス"),  "BENGOSHI_ABIES", "h3:アビエス"),
+    (_h3_pat("借金の悩み"), "BENGOSHI_ABIES", "h3:借金の悩み"),
+    (_h3_pat("ココナラ"),  "COCONALA", "h3:ココナラ"),
+    (_h3_pat("LIGHT FX"),                  "LIGHT_FX", "h3:LIGHT FX"),
+    (_h3_pat("楽天証券"),  "DMM_KABU", "h3:楽天証券"),
+    (_h3_pat("楽天銀行デビット"), "KASHIKINE_NEXUS", "h3:楽天銀行デビット"),
+    (_h3_pat("マネーフォワード"), "COCONALA", "h3:マネー"),
+    (_anchor_pat("DMM株で口座開設"),     "DMM_KABU", "anchor:DMM株"),
+    (_anchor_pat("ココナラに登録する"), "COCONALA", "anchor:ココナラ"),
+    (_anchor_pat("Nexus Card の詳細"),                "KASHIKINE_NEXUS", "anchor:Nexus"),
 ]
 
 
-def fix_content(html: str, categories: list = None) -> tuple:
-    """旧CTAを v2 (Card型) に置換。先頭にスタイル挿入＆Hero追加。
-    戻り値: (新HTML, 統計)"""
-    counts = {"replaced_card": 0, "skip_already_v2": 0, "added_style": False, "added_hero": False, "added_bottom": False}
-
-    # 既に v2 が入っているなら処理スキップ（多重処理防止）
+def fix_content(html, categories=None):
+    counts = {"replaced_card": 0, "skip_already_v2": 0, "added_hero": False, "added_bottom": False, "match_log": []}
     if "hb-cta-v2" in html:
         counts["skip_already_v2"] = 1
         return html, counts
-
-    new = html
+    new = html_lib.unescape(html)
     used_brands = set()
-
-    # 1. 既存CTA を Card型 に置換
-    for pat, brand in PATTERN_TO_BRAND:
+    for pat, brand, label in PATTERN_TO_BRAND:
+        matches_count = 0
         def _repl(m):
-            counts["replaced_card"] += 1
-            used_brands.add(brand)
+            nonlocal matches_count
+            matches_count += 1
             return make_cta(brand, "card")
         new = pat.sub(_repl, new)
-
+        if matches_count > 0:
+            counts["replaced_card"] += matches_count
+            counts["match_log"].append(f"{label}={matches_count}")
+            used_brands.add(brand)
     if counts["replaced_card"] == 0:
-        # 既存CTAが見つからない場合でも Hero/Bottom は追加してよい（強訴求のため）
-        # ただし誤適用回避のため既存に hb-cta-box が含まれている場合のみ
         if "hb-cta-box" not in html:
             return new, counts
-
-    # 2. 記事冒頭にHero（カテゴリに応じてブランド選択）
-    primary_cat = (categories[0] if categories else "Money").lower()
+    primary_cat = (categories[0] if categories else "money").lower()
     hero_brand = _pick_hero_brand(primary_cat, used_brands)
     if hero_brand:
-        hero_html = make_cta(hero_brand, "hero")
-        new = hero_html + "\n" + new
+        new = make_cta(hero_brand, "hero") + "\n\n" + new
         counts["added_hero"] = True
         used_brands.add(hero_brand)
-
-    # 3. 記事末尾にBottom（同上）
     bottom_brand = _pick_bottom_brand(primary_cat, used_brands)
     if bottom_brand:
-        bottom_html = make_cta(bottom_brand, "bottom")
-        new = new + "\n" + bottom_html
+        new = new + "\n\n" + make_cta(bottom_brand, "bottom")
         counts["added_bottom"] = True
-
     return new, counts
 
 
-def _pick_hero_brand(primary_cat: str, used: set) -> str:
-    """カテゴリと既使用ブランドから Hero に置くブランドを選ぶ。"""
-    # 優先順位（カテゴリ別）
+def _pick_hero_brand(primary_cat, used):
     if primary_cat in ("money", "お金"):
         order = ["BENGOSHI_ABIES", "DMM_KABU", "KASHIKINE_NEXUS", "COCONALA"]
     elif primary_cat in ("mental",):
@@ -154,8 +138,7 @@ def _pick_hero_brand(primary_cat: str, used: set) -> str:
     return None
 
 
-def _pick_bottom_brand(primary_cat: str, used: set) -> str:
-    """末尾は記事の主題と相性の良い最も訴求力のあるブランドを選ぶ。"""
+def _pick_bottom_brand(primary_cat, used):
     if primary_cat in ("money", "お金", "mental"):
         order = ["BENGOSHI_ABIES", "DMM_KABU", "COCONALA", "KASHIKINE_NEXUS"]
     elif primary_cat in ("business", "副業"):
@@ -172,16 +155,14 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--apply", action="store_true")
     p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--only-id", type=int, default=0)
     args = p.parse_args()
-
     if not (WP_URL and WP_USERNAME and WP_APP_PASSWORD):
         print("env missing", file=sys.stderr); sys.exit(2)
-
     print("=" * 70)
-    print(f" Mode: {'APPLY' if args.apply else 'DRY-RUN'}")
-    print(f" 旧CTA → 画像付き4タイプv2 へ全件アップグレード")
+    print(f" Mode: {'APPLY' if args.apply else 'DRY-RUN'}  limit={args.limit} only_id={args.only_id}")
+    print(" v2 (Hero+Card+Bottom)")
     print("=" * 70)
-
     page = 1
     total_posts = 0
     total_updated = 0
@@ -195,60 +176,72 @@ def main():
             if e.code == 400 and page > 1:
                 break
             raise
-        if not posts:
-            break
-
-        # カテゴリID→名前マップを取得
+        if not posts: break
         cat_map = {}
-        if posts and any(p_.get("categories") for p_ in posts):
-            try:
-                cats = http_get("/wp-json/wp/v2/categories?per_page=100&_fields=id,name,slug")
-                for c in cats:
-                    cat_map[c["id"]] = c.get("slug", c.get("name", ""))
-            except Exception:
-                pass
-
+        try:
+            cats = http_get("/wp-json/wp/v2/categories?per_page=100&_fields=id,name,slug")
+            for c in cats:
+                cat_map[c["id"]] = c.get("slug", c.get("name", ""))
+        except Exception:
+            pass
         for p_ in posts:
+            if args.only_id and p_["id"] != args.only_id:
+                continue
             total_posts += 1
             if args.limit and total_posts > args.limit:
                 break
             content = p_.get("content", {}).get("rendered", "")
             cat_slugs = [cat_map.get(cid, "") for cid in p_.get("categories", [])]
             new_content, counts = fix_content(content, categories=cat_slugs)
-            if counts["replaced_card"] > 0:
-                title = p_.get("title", {}).get("rendered", "")[:50]
-                print(f"\n  [{p_['status']}] id={p_['id']} {title}")
-                print(f"      replaced_card={counts['replaced_card']} added_hero={counts['added_hero']} added_bottom={counts['added_bottom']}")
-                if args.apply:
-                    try:
-                        res = wp_update(p_["id"], {"content": new_content})
-                        # WP の sanitize でどう変わったか確認
-                        ret_content = res.get("content", {}).get("rendered", "")
-                        kept_v2 = "hb-cta-v2" in ret_content
-                        print(f"      ✓ updated (v2 kept by WP={kept_v2})")
-                        total_updated += 1
-                        time.sleep(0.5)
-                    except urllib.error.HTTPError as e:
-                        body = ""
-                        try:
-                            body = e.read().decode("utf-8")[:200]
-                        except Exception:
-                            pass
-                        print(f"      ERR HTTP {e.code}: {body}")
-                    except Exception as e:
-                        print(f"      ERR: {type(e).__name__}: {e}")
-            elif counts["skip_already_v2"]:
-                print(f"  · id={p_['id']} already v2, skipped")
-        if len(posts) < 50:
+            title = p_.get("title", {}).get("rendered", "")[:50]
+            print(f"\n[post {p_['id']} status={p_['status']}] {title}")
+            print(f"  cat={cat_slugs}  content_len={len(content)}")
+            print(f"  matches: replaced={counts['replaced_card']} hero={counts['added_hero']} bottom={counts['added_bottom']} skip={counts['skip_already_v2']}")
+            if counts["match_log"]:
+                print(f"  match_detail: {counts['match_log']}")
+            if counts["replaced_card"] == 0 and not counts["skip_already_v2"]:
+                idx = content.find('hb-cta-title')
+                if idx >= 0:
+                    print(f"  [DEBUG] hb-cta-title at idx={idx}, surround:")
+                    print(f"  >>> {content[max(0,idx-50):idx+450]}")
+                else:
+                    print(f"  [DEBUG] no hb-cta-title; first 300 chars:")
+                    print(f"  >>> {content[:300]}")
+            if not args.apply:
+                continue
+            if counts["replaced_card"] == 0 and not (counts["added_hero"] or counts["added_bottom"]):
+                continue
+            try:
+                res = wp_update(p_["id"], {"content": new_content})
+                ret_content = res.get("content", {}).get("rendered", "")
+                print(f"  PUT ok | v2={'hb-cta-v2' in ret_content} hero={'hb-cta-hero' in ret_content} card={'hb-cta-card' in ret_content} bottom={'hb-cta-bottom' in ret_content}")
+                total_updated += 1
+                time.sleep(0.3)
+                check = http_get(f"/wp-json/wp/v2/posts/{p_['id']}?_fields=content&t=verify")
+                check_content = check.get("content", {}).get("rendered", "")
+                check_v2 = "hb-cta-v2" in check_content
+                print(f"  verify v2 in re-fetched: {check_v2}")
+                if not check_v2:
+                    idx = check_content.find('hb-cta-title')
+                    if idx >= 0:
+                        print(f"  [VERIFY-FAIL] hb-cta-title still at idx={idx}")
+                        print(f"  >>> {check_content[max(0,idx-30):idx+300]}")
+            except urllib.error.HTTPError as e:
+                body = ""
+                try: body = e.read().decode("utf-8")[:300]
+                except Exception: pass
+                print(f"  ERR HTTP {e.code}: {body}")
+            except Exception as e:
+                print(f"  ERR {type(e).__name__}: {e}")
+        if args.only_id and total_posts >= 1:
             break
+        if len(posts) < 50: break
         page += 1
-
     print("\n" + "=" * 70)
-    print(f" 対象: {total_posts}  更新済: {total_updated}")
+    print(f" total_posts={total_posts}  total_updated={total_updated}")
     print("=" * 70)
-    if not args.apply:
-        print(" --apply で確定実行")
 
 
 if __name__ == "__main__":
     main()
+
