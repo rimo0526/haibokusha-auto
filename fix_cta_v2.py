@@ -62,26 +62,32 @@ def wp_update(post_id, payload):
 
 # ── 旧CTA識別パターン ──
 # h3.hb-cta-title 〜 small.hb-cta-disclosure までの範囲を検出
+# WPのTOC生成プラグインが <h3> 内に <span id="tocN"> を注入することがあるため、
+# h3 内側はワイルドカードで吸収する。
+def _h3_pat(brand_keyword: str):
+    """h3 class="hb-cta-title" に brand_keyword を含み、
+    その後の最初の <small class="hb-cta-disclosure">...</small> までを範囲とする。
+    h3内側に <span id="tocN">...</span> 等が注入されていても拾えるよう、
+    h3を開いてから brand_keyword に到達するまで何でも許可する。"""
+    return re.compile(
+        r'<h3 class="hb-cta-title">[^<]*(?:<[^>]+>[^<]*)*?'
+        + re.escape(brand_keyword)
+        + r'.*?<small class="hb-cta-disclosure">[^<]*</small>',
+        re.DOTALL,
+    )
+
+
 PATTERN_TO_BRAND = [
-    (re.compile(r'<h3 class="hb-cta-title">DMM株[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "DMM_KABU"),
-    (re.compile(r'<h3 class="hb-cta-title">Nexus Card[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "KASHIKINE_NEXUS"),
-    (re.compile(r'<h3 class="hb-cta-title">アビエス[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "BENGOSHI_ABIES"),
-    (re.compile(r'<h3 class="hb-cta-title">借金の悩み[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "BENGOSHI_ABIES"),  # 旧 CTA_BENGOSHI_PRIMARY
-    (re.compile(r'<h3 class="hb-cta-title">ココナラ[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "COCONALA"),
-    (re.compile(r'<h3 class="hb-cta-title">LIGHT FX[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "LIGHT_FX"),
-    # 旧（fix_cta_mismatch 前に取り残されたもの、念のため）
-    (re.compile(r'<h3 class="hb-cta-title">楽天証券[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "DMM_KABU"),
-    (re.compile(r'<h3 class="hb-cta-title">楽天銀行デビット[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "KASHIKINE_NEXUS"),
-    (re.compile(r'<h3 class="hb-cta-title">マネーフォワード[^<]*</h3>.*?<small class="hb-cta-disclosure">[^<]*</small>', re.DOTALL),
-     "COCONALA"),
+    (_h3_pat("DMM株"),               "DMM_KABU"),
+    (_h3_pat("Nexus Card"),          "KASHIKINE_NEXUS"),
+    (_h3_pat("アビエス"),             "BENGOSHI_ABIES"),
+    (_h3_pat("借金の悩み"),           "BENGOSHI_ABIES"),  # 旧 CTA_BENGOSHI_PRIMARY
+    (_h3_pat("ココナラ"),             "COCONALA"),
+    (_h3_pat("LIGHT FX"),            "LIGHT_FX"),
+    # 旧（fix_cta_mismatch 前に取り残された場合の保険）
+    (_h3_pat("楽天証券"),             "DMM_KABU"),
+    (_h3_pat("楽天銀行デビット"),      "KASHIKINE_NEXUS"),
+    (_h3_pat("マネーフォワード"),      "COCONALA"),
 ]
 
 
