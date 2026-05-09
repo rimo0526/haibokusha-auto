@@ -1,21 +1,18 @@
-"""画像付きCTA 4タイプ テンプレート定義 (TPO別).
+"""画像付きCTA 4タイプ テンプレート定義 (TPO別) - インラインstyle版.
 
-タイプA: Hero Banner   - 記事冒頭、画像左+テキスト右、強い訴求
-タイプB: Card          - 中盤、画像上+ベネフィット+ボタン、自然な誘導
-タイプC: Inline        - 文中の自然リンク、軽い言及
-タイプD: Bottom Final  - 末尾の最強訴求、ロゴ+体験談+ボタン
+WP の KSES sanitizer は <style> ブロックを剥がす可能性があるため、
+全てのスタイルを style="..." 属性として要素に直接付与する。
 """
 
 # 各アフィの公式 OG 画像 URL（公開アクセス可、social embed 用に提供されているもの）
 BRAND_IMAGES = {
     "DMM_KABU":         "https://kabu.dmm.com/_img/og/common_230120.png",
     "KASHIKINE_NEXUS":  "https://apply.mycredit.nexuscard.co.jp/lp/common/images/apple-touch-icon.png",
-    "BENGOSHI_ABIES":   "https://www.abies-law.jp/img/img/co_logo.png",  # 通常ロゴ
+    "BENGOSHI_ABIES":   "https://www.abies-law.jp/img/img/co_logo.png",
     "COCONALA":         "https://coconala.com/images/facebook.png",
     "LIGHT_FX":         "https://lightfx.jp/images/social/facebook.jpg",
 }
 
-# 各アフィのアフィリエイト URL（A8 経由、5/9時点で全て200で実LP着地確認済）
 BRAND_URLS = {
     "DMM_KABU":         "https://px.a8.net/svt/ejp?a8mat=4B3LMU+759KY+1WP2+15QHIA",
     "KASHIKINE_NEXUS":  "https://px.a8.net/svt/ejp?a8mat=45G6PM+9ZLVPE+4T5W+5YJRM",
@@ -24,124 +21,109 @@ BRAND_URLS = {
     "LIGHT_FX":         "https://px.a8.net/svt/ejp?a8mat=3BDWT8+FDP656+46VO+5YJRM",
 }
 
-# ── 共通CSS（HTMLに先頭で1度だけ挿入する想定）──
-CTA_STYLE_BLOCK = """<style>
-.hb-cta-v2{box-sizing:border-box;border-radius:12px;margin:32px 0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;line-height:1.7}
-.hb-cta-v2 *{box-sizing:border-box}
-.hb-cta-v2 a{text-decoration:none}
-
-/* ── タイプA: Hero ── */
-.hb-cta-hero{display:flex;align-items:stretch;background:linear-gradient(135deg,#1E3A5F 0%,#2C5078 100%);color:#fff;padding:0;overflow:hidden;box-shadow:0 4px 16px rgba(30,58,95,.25)}
-.hb-cta-hero__img{flex:0 0 35%;background:#fff;padding:16px;display:flex;align-items:center;justify-content:center}
-.hb-cta-hero__img img{max-width:100%;max-height:140px;height:auto;object-fit:contain}
-.hb-cta-hero__body{flex:1;padding:20px 24px}
-.hb-cta-hero__label{display:inline-block;background:#FBC97A;color:#1E3A5F;font-weight:700;font-size:12px;padding:3px 10px;border-radius:4px;margin-bottom:8px}
-.hb-cta-hero__title{font-size:18px;font-weight:700;margin:0 0 8px;color:#fff;line-height:1.4}
-.hb-cta-hero__desc{font-size:14px;margin:0 0 14px;color:#E8EFF7}
-.hb-cta-hero__btn{display:inline-block;background:#C56A4E;color:#fff;font-weight:700;padding:10px 22px;border-radius:6px;font-size:15px}
-.hb-cta-hero__btn:hover{background:#A85940}
-@media(max-width:600px){.hb-cta-hero{flex-direction:column}.hb-cta-hero__img{flex:0 0 auto;padding:18px}.hb-cta-hero__img img{max-height:80px}.hb-cta-hero__btn{display:block;text-align:center;width:100%;padding:12px 16px}}
-
-/* ── タイプB: Card ── */
-.hb-cta-card{background:#FFF;border:1px solid #DDE3EC;border-radius:12px;padding:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.hb-cta-card__img{width:100%;background:#F7F3EC;padding:20px;text-align:center}
-.hb-cta-card__img img{max-width:60%;max-height:90px;height:auto}
-.hb-cta-card__body{padding:18px 22px}
-.hb-cta-card__label{display:inline-block;background:#1E3A5F;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;margin-bottom:6px}
-.hb-cta-card__title{font-size:17px;font-weight:700;margin:0 0 8px;color:#1E3A5F;line-height:1.4}
-.hb-cta-card__desc{font-size:14px;margin:0 0 12px;color:#444}
-.hb-cta-card__benefits{margin:0 0 14px;padding:0;list-style:none}
-.hb-cta-card__benefits li{position:relative;padding:3px 0 3px 22px;font-size:13px;color:#1E3A5F}
-.hb-cta-card__benefits li::before{content:"✓";position:absolute;left:4px;top:3px;color:#C56A4E;font-weight:900}
-.hb-cta-card__btn{display:block;background:#C56A4E;color:#fff;font-weight:700;text-align:center;padding:12px 16px;border-radius:6px;font-size:15px}
-.hb-cta-card__btn:hover{background:#A85940}
-.hb-cta-card__disc{font-size:11px;color:#888;margin:8px 0 0;text-align:center}
-
-/* ── タイプC: Inline ── */
-.hb-cta-inline{display:inline-flex;align-items:center;gap:6px;background:#FFF8E7;padding:4px 10px;border-radius:4px;border-bottom:2px solid #FBC97A;font-weight:600;color:#1E3A5F}
-.hb-cta-inline img{width:18px;height:18px;border-radius:3px;object-fit:contain;background:#fff;padding:1px}
-.hb-cta-inline:hover{background:#FBE8B5}
-
-/* ── タイプD: Bottom Final ── */
-.hb-cta-bottom{background:#F7F3EC;border:2px solid #C56A4E;border-radius:12px;padding:24px;text-align:center}
-.hb-cta-bottom__top{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px}
-.hb-cta-bottom__top img{width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;border:1px solid #DDE3EC}
-.hb-cta-bottom__brandname{font-size:13px;font-weight:700;color:#666;letter-spacing:1px}
-.hb-cta-bottom__title{font-size:22px;font-weight:800;color:#1E3A5F;margin:0 0 12px;line-height:1.4}
-.hb-cta-bottom__quote{font-size:14px;color:#444;background:#FFF;padding:14px 18px;border-left:4px solid #C56A4E;text-align:left;margin:0 0 16px;border-radius:4px}
-.hb-cta-bottom__benefits{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 18px;padding:0;list-style:none}
-.hb-cta-bottom__benefits li{background:#FFF;border:1px solid #DDE3EC;border-radius:20px;padding:6px 14px;font-size:13px;color:#1E3A5F;font-weight:600}
-.hb-cta-bottom__btn{display:inline-block;background:linear-gradient(135deg,#C56A4E 0%,#E08263 100%);color:#fff;font-weight:800;padding:14px 32px;border-radius:8px;font-size:17px;box-shadow:0 4px 12px rgba(197,106,78,.3);min-width:240px}
-.hb-cta-bottom__btn:hover{background:linear-gradient(135deg,#A85940 0%,#C56A4E 100%);transform:translateY(-1px)}
-.hb-cta-bottom__disc{font-size:11px;color:#888;margin:14px 0 0}
-@media(max-width:600px){.hb-cta-bottom__btn{display:block;width:100%}}
-</style>"""
+# ── インラインスタイル定義 ──
+S = {
+    # コンテナ共通
+    "wrap":   "display:block;margin:32px 0;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Hiragino Kaku Gothic ProN,Meiryo,sans-serif;line-height:1.7;box-sizing:border-box;",
+    # Hero
+    "hero":          "background:linear-gradient(135deg,#1E3A5F 0%,#2C5078 100%);color:#fff;padding:0;box-shadow:0 4px 16px rgba(30,58,95,.25);",
+    "hero_inner":    "display:flex;align-items:stretch;flex-wrap:wrap;",
+    "hero_img":      "flex:1 1 200px;background:#fff;padding:18px;display:flex;align-items:center;justify-content:center;min-height:140px;",
+    "hero_img_im":   "max-width:100%;max-height:140px;height:auto;object-fit:contain;",
+    "hero_body":     "flex:2 1 300px;padding:20px 24px;color:#fff;",
+    "hero_label":    "display:inline-block;background:#FBC97A;color:#1E3A5F;font-weight:700;font-size:12px;padding:3px 10px;border-radius:4px;margin-bottom:8px;",
+    "hero_title":    "font-size:18px;font-weight:700;margin:0 0 8px;color:#fff;line-height:1.4;",
+    "hero_desc":     "font-size:14px;margin:0 0 14px;color:#E8EFF7;",
+    "hero_btn":      "display:inline-block;background:#C56A4E;color:#fff;font-weight:700;padding:10px 22px;border-radius:6px;font-size:15px;text-decoration:none;",
+    # Card
+    "card":          "background:#fff;border:1px solid #DDE3EC;box-shadow:0 2px 8px rgba(0,0,0,.06);",
+    "card_imgwrap":  "width:100%;background:#F7F3EC;padding:20px;text-align:center;",
+    "card_imgwrap_im":"max-width:60%;max-height:90px;height:auto;",
+    "card_body":     "padding:18px 22px;",
+    "card_label":    "display:inline-block;background:#1E3A5F;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;margin-bottom:6px;",
+    "card_title":    "font-size:17px;font-weight:700;margin:0 0 8px;color:#1E3A5F;line-height:1.4;",
+    "card_desc":     "font-size:14px;margin:0 0 12px;color:#444;",
+    "card_btn":      "display:block;background:#C56A4E;color:#fff;font-weight:700;text-align:center;padding:12px 16px;border-radius:6px;font-size:15px;text-decoration:none;",
+    "card_disc":     "font-size:11px;color:#888;margin:8px 0 0;text-align:center;",
+    # Bottom
+    "bottom":        "background:#F7F3EC;border:2px solid #C56A4E;padding:24px;text-align:center;",
+    "bottom_top":    "display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;",
+    "bottom_top_im": "width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;border:1px solid #DDE3EC;",
+    "bottom_brand":  "font-size:13px;font-weight:700;color:#666;letter-spacing:1px;",
+    "bottom_title":  "font-size:22px;font-weight:800;color:#1E3A5F;margin:0 0 12px;line-height:1.4;",
+    "bottom_quote":  "font-size:14px;color:#444;background:#fff;padding:14px 18px;border-left:4px solid #C56A4E;text-align:left;margin:0 0 16px;border-radius:4px;",
+    "bottom_btn":    "display:inline-block;background:linear-gradient(135deg,#C56A4E 0%,#E08263 100%);color:#fff;font-weight:800;padding:14px 32px;border-radius:8px;font-size:17px;box-shadow:0 4px 12px rgba(197,106,78,.3);text-decoration:none;",
+    "bottom_disc":   "font-size:11px;color:#888;margin:14px 0 0;",
+    # ベネフィットリスト
+    "ul":            "list-style:none;padding:0;margin:0 0 14px;",
+    "li":            "padding:3px 0 3px 22px;font-size:13px;color:#1E3A5F;position:relative;",
+}
 
 
-def cta_hero(brand_key: str, label: str, title: str, desc: str, btn: str) -> str:
+def cta_hero(brand_key, label, title, desc, btn):
     img = BRAND_IMAGES[brand_key]
     url = BRAND_URLS[brand_key]
     return (
-        f'<aside class="hb-cta-v2 hb-cta-hero">'
-        f'<div class="hb-cta-hero__img"><img src="{img}" alt="{title}" loading="lazy"></div>'
-        f'<div class="hb-cta-hero__body">'
-        f'<span class="hb-cta-hero__label">{label}</span>'
-        f'<h3 class="hb-cta-hero__title">{title}</h3>'
-        f'<p class="hb-cta-hero__desc">{desc}</p>'
-        f'<a href="{url}" class="hb-cta-hero__btn" rel="sponsored nofollow noopener">{btn} →</a>'
+        f'<div class="hb-cta-v2 hb-cta-hero" style="{S["wrap"]}{S["hero"]}">'
+        f'<div style="{S["hero_inner"]}">'
+        f'<div style="{S["hero_img"]}"><img src="{img}" alt="{title}" style="{S["hero_img_im"]}" loading="lazy"></div>'
+        f'<div style="{S["hero_body"]}">'
+        f'<span style="{S["hero_label"]}">{label}</span>'
+        f'<h3 style="{S["hero_title"]}">{title}</h3>'
+        f'<p style="{S["hero_desc"]}">{desc}</p>'
+        f'<a href="{url}" style="{S["hero_btn"]}" rel="sponsored nofollow noopener">{btn} →</a>'
+        f'</div></div></div>'
+    )
+
+
+def cta_card(brand_key, label, title, desc, benefits, btn):
+    img = BRAND_IMAGES[brand_key]
+    url = BRAND_URLS[brand_key]
+    items = "".join(f'<li style="{S["li"]}">✓ {b}</li>' for b in benefits)
+    return (
+        f'<div class="hb-cta-v2 hb-cta-card" style="{S["wrap"]}{S["card"]}">'
+        f'<div style="{S["card_imgwrap"]}"><img src="{img}" alt="{title}" style="{S["card_imgwrap_im"]}" loading="lazy"></div>'
+        f'<div style="{S["card_body"]}">'
+        f'<span style="{S["card_label"]}">{label}</span>'
+        f'<h3 style="{S["card_title"]}">{title}</h3>'
+        f'<p style="{S["card_desc"]}">{desc}</p>'
+        f'<ul style="{S["ul"]}">{items}</ul>'
+        f'<a href="{url}" style="{S["card_btn"]}" rel="sponsored nofollow noopener">{btn} →</a>'
+        f'<p style="{S["card_disc"]}">※本リンク経由の申込で運営者に紹介料が発生します</p>'
+        f'</div></div>'
+    )
+
+
+def cta_inline(brand_key, anchor_text):
+    img = BRAND_IMAGES[brand_key]
+    url = BRAND_URLS[brand_key]
+    return (
+        f'<a class="hb-cta-v2 hb-cta-inline" href="{url}" rel="sponsored nofollow noopener" '
+        f'style="display:inline-flex;align-items:center;gap:6px;background:#FFF8E7;padding:4px 10px;border-radius:4px;border-bottom:2px solid #FBC97A;font-weight:600;color:#1E3A5F;text-decoration:none;">'
+        f'<img src="{img}" alt="" style="width:18px;height:18px;border-radius:3px;object-fit:contain;background:#fff;padding:1px;" loading="lazy">{anchor_text} →</a>'
+    )
+
+
+def cta_bottom(brand_key, brand_name, title, quote, benefits, btn):
+    img = BRAND_IMAGES[brand_key]
+    url = BRAND_URLS[brand_key]
+    items = "".join(f'<li style="background:#fff;border:1px solid #DDE3EC;border-radius:20px;padding:6px 14px;font-size:13px;color:#1E3A5F;font-weight:600;display:inline-block;margin:0 4px 4px 0;">{b}</li>' for b in benefits)
+    return (
+        f'<div class="hb-cta-v2 hb-cta-bottom" style="{S["wrap"]}{S["bottom"]}">'
+        f'<div style="{S["bottom_top"]}">'
+        f'<img src="{img}" alt="{brand_name}" style="{S["bottom_top_im"]}" loading="lazy">'
+        f'<span style="{S["bottom_brand"]}">{brand_name}</span>'
         f'</div>'
-        f'</aside>'
-    )
-
-
-def cta_card(brand_key: str, label: str, title: str, desc: str, benefits: list, btn: str) -> str:
-    img = BRAND_IMAGES[brand_key]
-    url = BRAND_URLS[brand_key]
-    benefits_html = "".join(f"<li>{b}</li>" for b in benefits)
-    return (
-        f'<aside class="hb-cta-v2 hb-cta-card">'
-        f'<div class="hb-cta-card__img"><img src="{img}" alt="{title}" loading="lazy"></div>'
-        f'<div class="hb-cta-card__body">'
-        f'<span class="hb-cta-card__label">{label}</span>'
-        f'<h3 class="hb-cta-card__title">{title}</h3>'
-        f'<p class="hb-cta-card__desc">{desc}</p>'
-        f'<ul class="hb-cta-card__benefits">{benefits_html}</ul>'
-        f'<a href="{url}" class="hb-cta-card__btn" rel="sponsored nofollow noopener">{btn} →</a>'
-        f'<p class="hb-cta-card__disc">※本リンク経由の申込で運営者に紹介料が発生します</p>'
+        f'<h3 style="{S["bottom_title"]}">{title}</h3>'
+        f'<p style="{S["bottom_quote"]}">{quote}</p>'
+        f'<ul style="list-style:none;padding:0;margin:0 0 18px;">{items}</ul>'
+        f'<a href="{url}" style="{S["bottom_btn"]}" rel="sponsored nofollow noopener">{btn} →</a>'
+        f'<p style="{S["bottom_disc"]}">※本記事には広告が含まれます。本リンク経由の申込で運営者に紹介料が発生します。</p>'
         f'</div>'
-        f'</aside>'
     )
 
 
-def cta_inline(brand_key: str, anchor_text: str) -> str:
-    img = BRAND_IMAGES[brand_key]
-    url = BRAND_URLS[brand_key]
-    return (
-        f'<a class="hb-cta-inline" href="{url}" rel="sponsored nofollow noopener">'
-        f'<img src="{img}" alt="" loading="lazy">{anchor_text} →</a>'
-    )
-
-
-def cta_bottom(brand_key: str, brand_name: str, title: str, quote: str, benefits: list, btn: str) -> str:
-    img = BRAND_IMAGES[brand_key]
-    url = BRAND_URLS[brand_key]
-    benefits_html = "".join(f"<li>{b}</li>" for b in benefits)
-    return (
-        f'<aside class="hb-cta-v2 hb-cta-bottom">'
-        f'<div class="hb-cta-bottom__top">'
-        f'<img src="{img}" alt="{brand_name}" loading="lazy">'
-        f'<span class="hb-cta-bottom__brandname">{brand_name}</span>'
-        f'</div>'
-        f'<h3 class="hb-cta-bottom__title">{title}</h3>'
-        f'<p class="hb-cta-bottom__quote">{quote}</p>'
-        f'<ul class="hb-cta-bottom__benefits">{benefits_html}</ul>'
-        f'<a href="{url}" class="hb-cta-bottom__btn" rel="sponsored nofollow noopener">{btn} →</a>'
-        f'<p class="hb-cta-bottom__disc">※本記事には広告が含まれます。本リンク経由の申込で運営者に紹介料が発生します。</p>'
-        f'</aside>'
-    )
-
-
-# ── プリセット（5アフィ × タイプ別） ──
+# ── プリセット定義 ──
 PRESETS = {
     "DMM_KABU": {
         "hero": dict(label="新NISA口座", title="DMM株：手数料0円・スマホ完結のNISA口座", desc="国内株売買手数料0円、米国株も対応。新NISA成長投資枠OK。", btn="DMM株で口座開設"),
@@ -176,15 +158,14 @@ PRESETS = {
 }
 
 
-def make_cta(brand_key: str, layout: str) -> str:
-    """指定ブランド・レイアウトのCTA HTMLを返す。layout: hero / card / inline / bottom"""
+def make_cta(brand_key, layout):
     cfg = PRESETS[brand_key][layout]
-    if layout == "hero":
-        return cta_hero(brand_key, **cfg)
-    if layout == "card":
-        return cta_card(brand_key, **cfg)
-    if layout == "inline":
-        return cta_inline(brand_key, **cfg)
-    if layout == "bottom":
-        return cta_bottom(brand_key, **cfg)
+    if layout == "hero":   return cta_hero(brand_key, **cfg)
+    if layout == "card":   return cta_card(brand_key, **cfg)
+    if layout == "inline": return cta_inline(brand_key, **cfg)
+    if layout == "bottom": return cta_bottom(brand_key, **cfg)
     raise ValueError(layout)
+
+
+# 互換のため空文字列で残しておく（fix_cta_v2.py が import）
+CTA_STYLE_BLOCK = ""

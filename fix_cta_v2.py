@@ -96,13 +96,13 @@ def fix_content(html: str, categories: list = None) -> tuple:
     戻り値: (新HTML, 統計)"""
     counts = {"replaced_card": 0, "skip_already_v2": 0, "added_style": False, "added_hero": False, "added_bottom": False}
 
-    # 既に v2 が入っているなら placeholder 修正のみで終了（多重処理防止）
+    # 既に v2 が入っているなら処理スキップ（多重処理防止）
     if "hb-cta-v2" in html:
         counts["skip_already_v2"] = 1
         return html, counts
 
     new = html
-    used_brands = set()  # 同じブランドが何度も出ないよう追跡
+    used_brands = set()
 
     # 1. 既存CTA を Card型 に置換
     for pat, brand in PATTERN_TO_BRAND:
@@ -113,24 +113,21 @@ def fix_content(html: str, categories: list = None) -> tuple:
         new = pat.sub(_repl, new)
 
     if counts["replaced_card"] == 0:
-        # 既存CTAなし → 何もしない
-        return new, counts
+        # 既存CTAが見つからない場合でも Hero/Bottom は追加してよい（強訴求のため）
+        # ただし誤適用回避のため既存に hb-cta-box が含まれている場合のみ
+        if "hb-cta-box" not in html:
+            return new, counts
 
-    # 2. スタイルブロックを記事冒頭に挿入
-    new = CTA_STYLE_BLOCK + "\n" + new
-    counts["added_style"] = True
-
-    # 3. 記事冒頭にHero（カテゴリに応じてブランド選択）
+    # 2. 記事冒頭にHero（カテゴリに応じてブランド選択）
     primary_cat = (categories[0] if categories else "Money").lower()
     hero_brand = _pick_hero_brand(primary_cat, used_brands)
     if hero_brand:
         hero_html = make_cta(hero_brand, "hero")
-        # スタイルブロック直後に挿入
-        new = new.replace(CTA_STYLE_BLOCK, CTA_STYLE_BLOCK + "\n" + hero_html, 1)
+        new = hero_html + "\n" + new
         counts["added_hero"] = True
         used_brands.add(hero_brand)
 
-    # 4. 記事末尾にBottom（同上）
+    # 3. 記事末尾にBottom（同上）
     bottom_brand = _pick_bottom_brand(primary_cat, used_brands)
     if bottom_brand:
         bottom_html = make_cta(bottom_brand, "bottom")
@@ -224,12 +221,22 @@ def main():
                 print(f"      replaced_card={counts['replaced_card']} added_hero={counts['added_hero']} added_bottom={counts['added_bottom']}")
                 if args.apply:
                     try:
-                        wp_update(p_["id"], {"content": new_content})
-                        print(f"      ✓ updated")
+                        res = wp_update(p_["id"], {"content": new_content})
+                        # WP の sanitize でどう変わったか確認
+                        ret_content = res.get("content", {}).get("rendered", "")
+                        kept_v2 = "hb-cta-v2" in ret_content
+                        print(f"      ✓ updated (v2 kept by WP={kept_v2})")
                         total_updated += 1
-                        time.sleep(0.4)
+                        time.sleep(0.5)
+                    except urllib.error.HTTPError as e:
+                        body = ""
+                        try:
+                            body = e.read().decode("utf-8")[:200]
+                        except Exception:
+                            pass
+                        print(f"      ERR HTTP {e.code}: {body}")
                     except Exception as e:
-                        print(f"      ERR: {e}", file=sys.stderr)
+                        print(f"      ERR: {type(e).__name__}: {e}")
             elif counts["skip_already_v2"]:
                 print(f"  · id={p_['id']} already v2, skipped")
         if len(posts) < 50:
